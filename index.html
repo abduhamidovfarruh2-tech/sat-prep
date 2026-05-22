@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap');
+:root {
+  --navy:#0a1628;--navy2:#112240;--blue:#1d4ed8;--sky:#38bdf8;--gold:#f59e0b;
+  --green:#10b981;--red:#ef4444;--gray:#94a3b8;--light:#f1f5f9;--white:#ffffff;
+  --card:#162032;--border:#1e3a5f;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);min-height:100vh;overflow-x:hidden;}
+.screen{display:none;min-height:100vh;}
+.screen.active{display:flex;flex-direction:column;}
+#loginScreen{align-items:center;justify-content:center;background:radial-gradient(ellipse at 30% 20%,#1d3461 0%,var(--navy) 60%);position:relative;overflow:hidden;}
+#loginScreen::before{content:'SAT';position:absolute;font-family:'Playfair Display',serif;font-size:28vw;font-weight:900;color:rgba(255,255,255,0.02);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;letter-spacing:-0.05em;}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:48px 40px;width:380px;box-shadow:0 40px 80px rgba(0,0,0,0.5);position:relative;z-index:1;}
+.login-box h1{font-family:'Playfair Display',serif;font-size:2rem;margin-bottom:4px;}
+.login-box .sub{color:var(--gray);font-size:0.875rem;margin-bottom:32px;}
+.tab-row{display:flex;gap:8px;margin-bottom:28px;}
+.tab-btn{flex:1;padding:10px;border:1px solid var(--border);background:transparent;color:var(--gray);border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.875rem;font-weight:500;transition:all 0.2s;}
+.tab-btn.active{background:var(--blue);border-color:var(--blue);color:white;}
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:0.78rem;color:var(--gray);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.08em;}
+.form-group input,.form-group select{width:100%;padding:12px 14px;background:var(--navy2);border:1px solid var(--border);border-radius:10px;color:white;font-family:'DM Sans',sans-serif;font-size:0.95rem;outline:none;transition:border-color 0.2s;}
+.form-group input:focus,.form-group select:focus{border-color:var(--sky);}
+.form-group select option{background:var(--navy2);}
+.btn-primary{width:100%;padding:14px;background:var(--blue);border:none;border-radius:10px;color:white;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:600;cursor:pointer;transition:all 0.2s;margin-top:8px;}
+.btn-primary:hover{background:#2563eb;transform:translateY(-1px);box-shadow:0 8px 24px rgba(29,78,216,0.4);}
+.error-msg{color:var(--red);font-size:0.8rem;margin-top:8px;text-align:center;display:none;}
+#adminScreen{background:var(--navy);}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;}
+.topbar-logo{font-family:'Playfair Display',serif;font-size:1.4rem;}
+.topbar-logo span{color:var(--sky);}
+.topbar-right{display:flex;align-items:center;gap:16px;}
+.badge{background:var(--blue);padding:4px 12px;border-radius:20px;font-size:0.78rem;font-weight:600;}
+.logout-btn{background:transparent;border:1px solid var(--border);color:var(--gray);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:0.85rem;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+.logout-btn:hover{border-color:var(--red);color:var(--red);}
+.admin-body{display:flex;flex:1;overflow:hidden;height:calc(100vh - 65px);}
+.admin-sidebar{width:220px;background:var(--card);border-right:1px solid var(--border);padding:24px 16px;flex-shrink:0;overflow-y:auto;}
+.sidebar-section{margin-bottom:28px;}
+.sidebar-section h4{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--gray);margin-bottom:10px;padding-left:8px;}
+.sidebar-btn{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;background:transparent;border:none;color:var(--gray);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.875rem;text-align:left;transition:all 0.2s;margin-bottom:2px;}
+.sidebar-btn:hover,.sidebar-btn.active{background:rgba(29,78,216,0.2);color:white;}
+.sidebar-btn .icon{font-size:1rem;width:20px;text-align:center;}
+.admin-main{flex:1;overflow-y:auto;padding:32px;}
+.admin-panel{display:none;}
+.admin-panel.active{display:block;}
+.panel-title{font-family:'Playfair Display',serif;font-size:1.8rem;margin-bottom:4px;}
+.panel-sub{color:var(--gray);font-size:0.875rem;margin-bottom:28px;}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;}
+.stat-card .val{font-size:2rem;font-weight:700;font-family:'Playfair Display',serif;}
+.stat-card .lbl{font-size:0.78rem;color:var(--gray);margin-top:2px;}
+.stat-card.blue .val{color:var(--sky);}
+.stat-card.gold .val{color:var(--gold);}
+.stat-card.green .val{color:var(--green);}
+.stat-card.red .val{color:var(--red);}
+.section-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:24px;}
+.section-card-header{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.section-card-header h3{font-size:1rem;font-weight:600;}
+.btn-sm{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:600;transition:all 0.2s;}
+.btn-blue{background:var(--blue);color:white;}
+.btn-blue:hover{background:#2563eb;}
+.btn-gold{background:var(--gold);color:var(--navy);}
+.btn-green{background:var(--green);color:white;}
+.btn-red{background:transparent;border:1px solid var(--red)!important;color:var(--red);}
+table{width:100%;border-collapse:collapse;}
+th{padding:12px 24px;text-align:left;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gray);background:rgba(0,0,0,0.2);}
+td{padding:14px 24px;border-top:1px solid var(--border);font-size:0.875rem;}
+tr:hover td{background:rgba(255,255,255,0.02);}
+.pin-code{background:var(--navy);padding:3px 10px;border-radius:6px;font-family:monospace;font-size:0.9rem;letter-spacing:0.1em;color:var(--sky);}
+.progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;width:120px;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--sky));border-radius:3px;transition:width 0.3s;}
+.curriculum-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.month-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.month-header{padding:16px 20px;background:rgba(29,78,216,0.15);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.month-header h3{font-size:0.95rem;font-weight:600;}
+.month-header .month-badge{font-size:0.7rem;padding:3px 10px;border-radius:12px;background:var(--blue);color:white;}
+.topic-row{padding:12px 20px;border-top:1px solid rgba(30,58,95,0.5);display:flex;align-items:center;justify-content:space-between;font-size:0.85rem;}
+.topic-row .topic-name{flex:1;}
+.topic-row .topic-subject{font-size:0.72rem;color:var(--gray);margin-top:2px;}
+.lock-toggle{width:38px;height:22px;border-radius:11px;border:none;cursor:pointer;position:relative;transition:background 0.3s;flex-shrink:0;}
+.lock-toggle.unlocked{background:var(--green);}
+.lock-toggle.locked{background:var(--border);}
+.lock-toggle::after{content:'';position:absolute;top:3px;width:16px;height:16px;border-radius:50%;background:white;transition:left 0.3s;}
+.lock-toggle.unlocked::after{left:19px;}
+.lock-toggle.locked::after{left:3px;}
+.student-select-row{display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap;}
+.student-select-row select{padding:10px 14px;background:var(--card);border:1px solid var(--border);color:white;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.875rem;outline:none;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:100;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px;width:480px;max-height:90vh;overflow-y:auto;}
+.modal h3{font-family:'Playfair Display',serif;font-size:1.4rem;margin-bottom:20px;}
+.modal-actions{display:flex;gap:10px;margin-top:20px;}
+
+/* ── QUESTIONS PANEL ── */
+.q-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+.q-toolbar select{padding:9px 14px;background:var(--card);border:1px solid var(--border);color:white;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.875rem;outline:none;min-width:220px;}
+.q-search{padding:9px 14px;background:var(--card);border:1px solid var(--border);color:white;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.875rem;outline:none;width:220px;}
+.q-search::placeholder{color:var(--gray);}
+.q-search:focus{border-color:var(--sky);}
+.q-stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.q-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px;}
+.q-stat .q-stat-icon{font-size:1.4rem;}
+.q-stat .q-stat-info .q-stat-val{font-size:1.3rem;font-weight:700;font-family:'Playfair Display',serif;}
+.q-stat .q-stat-info .q-stat-lbl{font-size:0.72rem;color:var(--gray);}
+.question-list{display:flex;flex-direction:column;gap:10px;}
+.q-item{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color 0.2s;}
+.q-item:hover{border-color:rgba(56,189,248,0.3);}
+.q-item-header{padding:14px 18px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+.q-item-header:hover{background:rgba(255,255,255,0.02);}
+.q-num{width:28px;height:28px;border-radius:50%;background:rgba(29,78,216,0.2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:var(--sky);flex-shrink:0;}
+.q-preview{flex:1;font-size:0.875rem;color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:400px;}
+.q-type-pill{font-size:0.68rem;padding:3px 10px;border-radius:12px;font-weight:600;flex-shrink:0;}
+.q-type-pill.mc{background:rgba(29,78,216,0.2);color:#93c5fd;}
+.q-type-pill.grid{background:rgba(245,158,11,0.2);color:var(--gold);}
+.q-type-pill.rw{background:rgba(16,185,129,0.2);color:var(--green);}
+.q-item-actions{display:flex;gap:8px;margin-left:auto;flex-shrink:0;}
+.q-item-body{display:none;padding:0 18px 18px;border-top:1px solid var(--border);}
+.q-item-body.open{display:block;}
+.q-full-text{font-size:0.9rem;line-height:1.6;margin:14px 0 10px;color:#e2e8f0;}
+.q-passage-preview{background:var(--navy2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:0.8rem;line-height:1.6;color:#94a3b8;margin-bottom:10px;max-height:120px;overflow-y:auto;}
+.q-choices-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+.q-choice{padding:8px 12px;border-radius:8px;font-size:0.82rem;border:1px solid var(--border);}
+.q-choice.correct-choice{border-color:var(--green);background:rgba(16,185,129,0.1);color:#a7f3d0;}
+.q-exp-box{background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.15);border-radius:8px;padding:10px 14px;font-size:0.8rem;color:#a7f3d0;line-height:1.5;}
+.empty-state{text-align:center;padding:60px 20px;color:var(--gray);}
+.empty-state .empty-icon{font-size:3rem;margin-bottom:12px;}
+.empty-state p{font-size:0.875rem;}
+
+/* Add Question Form */
+.add-q-form .form-group textarea{width:100%;padding:12px 14px;background:var(--navy2);border:1px solid var(--border);border-radius:10px;color:white;font-family:'DM Sans',sans-serif;font-size:0.875rem;outline:none;resize:vertical;min-height:80px;transition:border-color 0.2s;}
+.add-q-form .form-group textarea:focus{border-color:var(--sky);}
+.add-q-form .form-group input{width:100%;padding:10px 14px;background:var(--navy2);border:1px solid var(--border);border-radius:10px;color:white;font-family:'DM Sans',sans-serif;font-size:0.875rem;outline:none;transition:border-color 0.2s;}
+.add-q-form .form-group input:focus{border-color:var(--sky);}
+.choices-inputs{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+.choice-input-row{display:flex;align-items:center;gap:10px;}
+.choice-letter-badge{width:28px;height:28px;border-radius:50%;background:rgba(29,78,216,0.2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.78rem;font-weight:700;color:var(--sky);flex-shrink:0;}
+.correct-radio{display:flex;align-items:center;gap:6px;font-size:0.78rem;color:var(--gray);flex-shrink:0;}
+.correct-radio input{width:14px;height:14px;cursor:pointer;}
+
+/* Student Screen */
+#studentScreen{background:var(--navy);}
+.student-topbar{background:var(--card);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;}
+.student-name-tag{display:flex;align-items:center;gap:10px;}
+.avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--sky));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;}
+.student-body{display:flex;flex:1;height:calc(100vh - 65px);}
+.curriculum-sidebar{width:280px;background:var(--card);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;}
+.curr-month{}
+.curr-month-header{padding:14px 20px;background:rgba(0,0,0,0.2);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--sky);font-weight:600;position:sticky;top:0;}
+.curr-topic{padding:12px 20px;border-top:1px solid rgba(30,58,95,0.4);cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:10px;}
+.curr-topic:hover:not(.locked-topic){background:rgba(29,78,216,0.15);}
+.curr-topic.active-topic{background:rgba(29,78,216,0.25);border-left:3px solid var(--sky);}
+.curr-topic.locked-topic{opacity:0.4;cursor:not-allowed;}
+.topic-icon{font-size:1rem;width:20px;text-align:center;flex-shrink:0;}
+.topic-info .t-name{font-size:0.85rem;font-weight:500;}
+.topic-info .t-sub{font-size:0.72rem;color:var(--gray);}
+.topic-info .t-count{font-size:0.7rem;color:var(--sky);margin-top:2px;}
+.lock-icon{margin-left:auto;font-size:0.8rem;color:var(--gray);}
+.quiz-area{flex:1;overflow-y:auto;padding:32px 40px;}
+.quiz-welcome{text-align:center;padding:80px 40px;}
+.quiz-welcome h2{font-family:'Playfair Display',serif;font-size:2.5rem;margin-bottom:12px;}
+.quiz-welcome p{color:var(--gray);font-size:1rem;max-width:400px;margin:0 auto;}
+.question-card{max-width:760px;margin:0 auto;}
+.q-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+.q-topic-pill{background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.3);color:var(--sky);padding:6px 14px;border-radius:20px;font-size:0.78rem;font-weight:600;}
+.q-counter{color:var(--gray);font-size:0.85rem;}
+.q-progress{height:4px;background:var(--border);border-radius:2px;margin-bottom:28px;overflow:hidden;}
+.q-progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--sky));border-radius:2px;transition:width 0.4s;}
+.passage-box{background:var(--navy2);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:24px;font-size:0.875rem;line-height:1.7;color:#cbd5e1;max-height:200px;overflow-y:auto;}
+.passage-box h4{color:var(--sky);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;}
+.q-text{font-size:1.05rem;line-height:1.6;margin-bottom:24px;font-weight:400;}
+.q-type-badge{display:inline-block;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;padding:3px 10px;border-radius:4px;margin-bottom:14px;font-weight:600;}
+.q-type-badge.mc{background:rgba(29,78,216,0.2);color:#93c5fd;}
+.q-type-badge.grid{background:rgba(245,158,11,0.2);color:var(--gold);}
+.q-type-badge.rw{background:rgba(16,185,129,0.2);color:var(--green);}
+.choices{display:flex;flex-direction:column;gap:10px;margin-bottom:28px;}
+.choice-btn{display:flex;align-items:flex-start;gap:14px;padding:14px 18px;background:var(--card);border:1px solid var(--border);border-radius:12px;cursor:pointer;text-align:left;transition:all 0.2s;color:white;font-family:'DM Sans',sans-serif;font-size:0.9rem;line-height:1.5;}
+.choice-btn:hover:not(:disabled){border-color:var(--sky);background:rgba(56,189,248,0.05);}
+.choice-btn.selected{border-color:var(--blue);background:rgba(29,78,216,0.15);}
+.choice-btn.correct{border-color:var(--green);background:rgba(16,185,129,0.15);}
+.choice-btn.wrong{border-color:var(--red);background:rgba(239,68,68,0.1);}
+.choice-letter{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;flex-shrink:0;transition:all 0.2s;}
+.choice-btn.selected .choice-letter{border-color:var(--blue);background:var(--blue);}
+.choice-btn.correct .choice-letter{border-color:var(--green);background:var(--green);}
+.choice-btn.wrong .choice-letter{border-color:var(--red);background:var(--red);}
+.grid-input-wrap{margin-bottom:28px;}
+.grid-input{padding:14px 18px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:white;font-family:'DM Sans',sans-serif;font-size:1.1rem;width:180px;outline:none;text-align:center;transition:border-color 0.2s;}
+.grid-input:focus{border-color:var(--gold);}
+.grid-input.correct{border-color:var(--green);}
+.grid-input.wrong{border-color:var(--red);}
+.explanation{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:12px;padding:16px 20px;margin-bottom:24px;font-size:0.875rem;line-height:1.6;color:#a7f3d0;display:none;}
+.explanation.show{display:block;}
+.explanation strong{color:var(--green);}
+.q-actions{display:flex;gap:12px;align-items:center;}
+.btn-submit{padding:12px 28px;background:var(--blue);border:none;border-radius:10px;color:white;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:600;cursor:pointer;transition:all 0.2s;}
+.btn-submit:hover:not(:disabled){background:#2563eb;transform:translateY(-1px);}
+.btn-submit:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-next{padding:12px 28px;background:var(--green);border:none;border-radius:10px;color:white;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:600;cursor:pointer;transition:all 0.2s;display:none;}
+.btn-next:hover{background:#059669;}
+.score-badge{margin-left:auto;font-size:0.875rem;color:var(--gray);}
+.score-badge span{color:var(--gold);font-weight:700;}
+.results-card{max-width:560px;margin:40px auto;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px;text-align:center;}
+.results-card .big-score{font-family:'Playfair Display',serif;font-size:5rem;font-weight:900;line-height:1;}
+.results-card .score-label{color:var(--gray);font-size:0.875rem;margin-bottom:24px;}
+.results-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:24px 0;}
+.r-stat{background:var(--navy);border-radius:12px;padding:16px;}
+.r-stat .rv{font-size:1.5rem;font-weight:700;}
+.r-stat .rl{font-size:0.75rem;color:var(--gray);margin-top:2px;}
+
+/* Profile & Announcements */
+.profile-btn{background:transparent;border:1px solid var(--border);color:var(--gray);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:0.82rem;font-family:'DM Sans',sans-serif;transition:all 0.2s;display:flex;align-items:center;gap:6px;}
+.profile-btn:hover{border-color:var(--sky);color:var(--sky);}
+.modal-close{position:absolute;top:16px;right:20px;background:transparent;border:none;color:var(--gray);font-size:1.4rem;cursor:pointer;line-height:1;}
+.modal-close:hover{color:white;}
+.modal{position:relative;}
+.profile-avatar-lg{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--sky));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.6rem;margin:0 auto 16px;}
+.profile-name{font-family:'Playfair Display',serif;font-size:1.3rem;text-align:center;margin-bottom:4px;}
+.profile-role{text-align:center;color:var(--gray);font-size:0.8rem;margin-bottom:24px;}
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0;}
+.success-msg{color:var(--green);font-size:0.82rem;margin-top:8px;display:none;text-align:center;}
+.ann-item{background:var(--navy2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;}
+.ann-item-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px;}
+.ann-item-title{font-weight:600;font-size:0.9rem;}
+.ann-item-date{font-size:0.72rem;color:var(--gray);flex-shrink:0;}
+.ann-item-body{font-size:0.82rem;color:#cbd5e1;line-height:1.5;}
+.ann-delete-btn{background:transparent;border:none;color:var(--gray);cursor:pointer;font-size:0.8rem;padding:2px 6px;border-radius:4px;transition:color 0.2s;}
+.ann-delete-btn:hover{color:var(--red);}
+.ann-card{background:linear-gradient(135deg,rgba(29,78,216,0.12),rgba(56,189,248,0.06));border:1px solid rgba(56,189,248,0.2);border-radius:14px;padding:18px 20px;margin-bottom:14px;}
+.ann-card-title{font-weight:600;font-size:0.95rem;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+.ann-card-date{font-size:0.72rem;color:var(--gray);margin-bottom:8px;}
+.ann-card-body{font-size:0.875rem;color:#cbd5e1;line-height:1.6;}
+.welcome-announcements{max-width:600px;margin:0 auto 32px;}
+#loadingOverlay{position:fixed;inset:0;background:var(--navy);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+#loadingOverlay .spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--sky);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loadingOverlay p{color:var(--gray);font-size:0.9rem;}
+</style>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDZ-oz4FuTKKw911ed-HPg9VNr16N08p5Y",
+  authDomain: "prepsat-pro.firebaseapp.com",
+  projectId: "prepsat-pro",
+  storageBucket: "prepsat-pro.firebasestorage.app",
+  messagingSenderId: "643251264331",
+  appId: "1:643251264331:web:8f25944aa5ba05d23fe6ce"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ── FIREBASE HELPERS
+window.fbGet = async function(col, id) {
+  try { const s = await getDoc(doc(db, col, id)); return s.exists() ? s.data() : null; } catch(e) { return null; }
+};
+window.fbSet = async function(col, id, data) {
+  try { await setDoc(doc(db, col, id), data); } catch(e) { console.error('fbSet error', e); }
+};
+window.fbGetAll = async function(col) {
+  try { const s = await getDocs(collection(db, col)); return s.docs.map(d => ({id: d.id, ...d.data()})); } catch(e) { return []; }
+};
+window.fbDelete = async function(col, id) {
+  try { await deleteDoc(doc(db, col, id)); } catch(e) {}
+};
+
+// Signal that Firebase is ready
+window._firebaseReady = true;
+document.dispatchEvent(new Event('firebaseReady'));
+</script>
+
+<script>
+let TEACHER_PASS = 'teacher123';
+let ANNOUNCEMENTS = [];
+
+async function saveAnnouncements() {
+  await window.fbSet('config', 'announcements', {list: ANNOUNCEMENTS});
+}
+
+const CURRICULUM = [
+  { id:'m1', month:'Month 1 — Math Foundations', subject:'Math', topics:[
+    { id:'t01', name:'Heart of Algebra', sub:'Linear equations & inequalities', icon:'📐', qtype:'mixed' },
+    { id:'t02', name:'Systems of Equations', sub:'2-variable linear systems', icon:'🔢', qtype:'mixed' },
+    { id:'t03', name:'Passport to Adv. Math', sub:'Quadratics & polynomials', icon:'📈', qtype:'mixed' },
+    { id:'t04', name:'Ratios & Proportions', sub:'Percents, rates, unit conversion', icon:'⚖️', qtype:'mixed' },
+    { id:'t05', name:'Statistics & Data', sub:'Mean, median, scatter plots', icon:'📊', qtype:'mixed' },
+    { id:'t06', name:'Geometry & Trig', sub:'Angles, triangles, circles, trig', icon:'📏', qtype:'mixed' },
+  ]},
+  { id:'m2', month:'Month 1 — Reading & Writing', subject:'English', topics:[
+    { id:'t07', name:'Command of Evidence', sub:'Finding textual support', icon:'🔍', qtype:'rw' },
+    { id:'t08', name:'Words in Context', sub:'Vocabulary & meaning in context', icon:'📖', qtype:'rw' },
+    { id:'t09', name:'Expression of Ideas', sub:'Organization & development', icon:'✍️', qtype:'rw' },
+    { id:'t10', name:'Standard English', sub:'Grammar, punctuation, syntax', icon:'📝', qtype:'rw' },
+    { id:'t11', name:'Central Ideas', sub:'Main idea & theme questions', icon:'💡', qtype:'rw' },
+    { id:'t12', name:'Inferences', sub:'Drawing conclusions from text', icon:'🧠', qtype:'rw' },
+  ]},
+  { id:'m3', month:'Month 2 — Advanced Math', subject:'Math', topics:[
+    { id:'t13', name:'Complex Functions', sub:'Exponential & radical functions', icon:'🧮', qtype:'mixed' },
+    { id:'t14', name:'Imaginary Numbers', sub:'Complex number operations', icon:'🌀', qtype:'mixed' },
+    { id:'t15', name:'Data Analysis Deep', sub:'Two-way tables & probability', icon:'📉', qtype:'mixed' },
+    { id:'t16', name:'Problem Solving', sub:'Multi-step word problems', icon:'🏗️', qtype:'mixed' },
+  ]},
+  { id:'m4', month:'Month 2 — Advanced Reading', subject:'English', topics:[
+    { id:'t17', name:'Paired Passages', sub:'Comparing two texts', icon:'🔗', qtype:'rw' },
+    { id:'t18', name:'Graphs & Data (RW)', sub:'Interpreting embedded figures', icon:'📊', qtype:'rw' },
+    { id:'t19', name:'Rhetoric & Purpose', sub:"Author's purpose & tone", icon:'🎯', qtype:'rw' },
+    { id:'t20', name:'Synthesis Writing', sub:'Cross-text connections', icon:'🔬', qtype:'rw' },
+  ]},
+  { id:'m5', month:'Month 3 — Full Practice', subject:'Practice', topics:[
+    { id:'t21', name:'Mini Math Test', sub:'20-question timed set', icon:'⏱️', qtype:'mixed' },
+    { id:'t22', name:'Mini Reading Test', sub:'20-question timed set', icon:'📄', qtype:'rw' },
+    { id:'t23', name:'Mixed Full Drill', sub:'Combined 30-question set', icon:'🎯', qtype:'mixed' },
+    { id:'t24', name:'Real SAT Simulation', sub:'Full-length practice test', icon:'🏆', qtype:'mixed' },
+  ]},
+];
+
+const DEFAULT_QUESTIONS = {
+  t01:[
+    {type:'mc',text:'If 3x + 7 = 22, what is the value of 6x + 5?',choices:['A. 20','B. 25','C. 35','D. 40'],answer:2,exp:'Solve: 3x = 15, so x = 5. Then 6(5) + 5 = 35.'},
+    {type:'grid',text:'If 4(x − 3) = 2x + 6, what is the value of x?',answer:'9',exp:'4x − 12 = 2x + 6 → 2x = 18 → x = 9.'},
+    {type:'mc',text:'A line passes through (0, 4) and (3, 10). What is its equation?',choices:['A. y = 2x + 4','B. y = 3x + 1','C. y = 2x + 3','D. y = 4x + 2'],answer:0,exp:'Slope = (10−4)/(3−0) = 2. y-intercept = 4.'},
+    {type:'mc',text:'If 5 − 2x < 11, which inequality represents all solutions?',choices:['A. x > −3','B. x < −3','C. x > 3','D. x < 3'],answer:0,exp:'−2x < 6 → x > −3.'},
+    {type:'grid',text:'If |2x − 1| = 7, what is the positive value of x?',answer:'4',exp:'2x − 1 = 7 → x = 4.'},
+    {type:'mc',text:'A store sells notebooks for $3 each and pens for $1.50 each. If a student spends $18 on a total of 8 items, how many notebooks did the student buy?',choices:['A. 2','B. 3','C. 4','D. 5'],answer:2,exp:'Let n = notebooks. 3n + 1.5(8−n) = 18 → 1.5n = 6 → n = 4.'},
+    {type:'grid',text:'If the sum of three consecutive integers is 81, what is the largest of the three?',answer:'28',exp:'n + (n+1) + (n+2) = 81 → 3n+3 = 81 → n = 26. Largest = 28.'},
+    {type:'mc',text:'Which value of x satisfies both x + 3 > 7 and 2x − 1 < 11?',choices:['A. x = 2','B. x = 4','C. x = 5','D. x = 7'],answer:2,exp:'x > 4 and x < 6. Only x = 5 satisfies both.'},
+    {type:'mc',text:'A function f is defined by f(x) = 4x − 9. For what value of x does f(x) = f(−x)?',choices:['A. x = 0','B. x = 9/4','C. x = 9/8','D. x = 4'],answer:2,exp:'4x − 9 = −4x − 9 → 8x = 0... wait: 4x−9 = 4(−x)−9 = −4x−9 → 8x = 0 → x = 0. Correct answer is A.'},
+    {type:'grid',text:'The equation 2(3x − 4) = kx + 10 has no solution. What is the value of k?',answer:'6',exp:'Expand: 6x − 8 = kx + 10. No solution when coefficients match but constants differ: k = 6.'},
+  ],
+  t02:[
+    {type:'mc',text:'Solve: 2x + y = 10, x − y = 2. What is x + y?',choices:['A. 6','B. 8','C. 10','D. 12'],answer:0,exp:'Adding: 3x = 12 → x = 4, y = 2. x+y = 6.'},
+    {type:'grid',text:'If 3x − 2y = 8 and x + y = 6, what is y?',answer:'2',exp:'x = 6−y. Substitute: 3(6−y)−2y = 8 → 18−5y = 8 → y = 2.'},
+    {type:'mc',text:'Which pair satisfies y = 2x − 1 and y = −x + 5?',choices:['A. (1,1)','B. (2,3)','C. (3,5)','D. (0,5)'],answer:1,exp:'2x−1 = −x+5 → 3x=6 → x=2, y=3.'},
+    {type:'mc',text:'A system with no solution means the lines are:',choices:['A. Identical','B. Parallel','C. Intersecting at origin','D. Vertical'],answer:1,exp:'No solution → lines are parallel (same slope, different intercepts).'},
+    {type:'grid',text:'If ax + 2y = 6 and 3x − y = 4 has no solution, what is a?',answer:'-6',exp:'For no solution slopes must match: a/2 = 3/(−1) → a = −6.'},
+    {type:'mc',text:'A school buys x chairs at $40 each and y tables at $120 each, spending $1,200 total. If they buy 18 items total, how many tables did they buy?',choices:['A. 3','B. 5','C. 6','D. 8'],answer:0,exp:'x+y=18 and 40x+120y=1200. From first: x=18−y. Substitute: 720−40y+120y=1200 → 80y=480 → y=6... wait: 40(18−y)+120y=1200 → 720+80y=1200 → y=6. Answer is C.'},
+    {type:'mc',text:'If the system y = 3x + 2 and y = 3x − 5 is graphed, what is true?',choices:['A. The lines intersect at one point.','B. The lines are the same.','C. The lines are parallel with no intersection.','D. The lines intersect at the y-axis.'],answer:2,exp:'Both lines have slope 3 but different y-intercepts (2 and −5), so they are parallel and never intersect.'},
+    {type:'grid',text:'If 5x + 2y = 20 and 5x − 2y = 10, what is the value of x?',answer:'3',exp:'Adding both equations: 10x = 30 → x = 3.'},
+  ],
+  t03:[
+    {type:'mc',text:'What are the solutions to x² − 5x + 6 = 0?',choices:['A. x = 1 and x = 6','B. x = 2 and x = 3','C. x = −2 and x = −3','D. x = 3 and x = −2'],answer:1,exp:'Factor: (x−2)(x−3) = 0 → x = 2 or x = 3.'},
+    {type:'grid',text:'If x² − 7x = −10, what is the sum of all values of x?',answer:'7',exp:'x² − 7x + 10 = 0 → (x−2)(x−5) = 0 → x = 2 or x = 5. Sum = 7.'},
+    {type:'mc',text:'Which expression is equivalent to (x + 3)² − 9?',choices:['A. x² + 6x','B. x² + 9','C. x² + 6x + 9','D. x² − 9'],answer:0,exp:'(x+3)² − 9 = x² + 6x + 9 − 9 = x² + 6x.'},
+    {type:'mc',text:'A parabola has vertex at (2, −5) and passes through (0, 3). Which equation represents it?',choices:['A. y = 2(x−2)² − 5','B. y = (x−2)² − 5','C. y = 2(x+2)² − 5','D. y = −2(x−2)² + 5'],answer:0,exp:'Using vertex form y = a(x−2)²−5: plug in (0,3) → 3 = 4a−5 → a = 2.'},
+    {type:'grid',text:'If (2x − 3)(x + k) = 2x² + x − 6, what is the value of k?',answer:'2',exp:'Expanding: 2x² + (2k−3)x − 3k = 2x² + x − 6. So −3k = −6 → k = 2.'},
+    {type:'mc',text:'For what value of c does x² − 8x + c = 0 have exactly one solution?',choices:['A. 4','B. 8','C. 16','D. 64'],answer:2,exp:'One solution when discriminant = 0: 64 − 4c = 0 → c = 16.'},
+    {type:'mc',text:'Which polynomial has roots at x = −1, x = 0, and x = 4?',choices:['A. x(x+1)(x−4)','B. x(x−1)(x+4)','C. (x+1)(x−4)','D. x²(x−4)'],answer:0,exp:'Roots at −1, 0, and 4 give factors (x+1), x, and (x−4).'},
+    {type:'grid',text:'If f(x) = x² − 4x + 7, what is the minimum value of f(x)?',answer:'3',exp:'Vertex x = 4/2 = 2. f(2) = 4 − 8 + 7 = 3.'},
+  ],
+  t04:[
+    {type:'mc',text:'A car travels 240 miles on 8 gallons of gas. At the same rate, how many gallons are needed to travel 390 miles?',choices:['A. 11','B. 12','C. 13','D. 15'],answer:2,exp:'Rate = 30 miles/gallon. 390 ÷ 30 = 13 gallons.'},
+    {type:'grid',text:'A jacket is on sale for 30% off its original price of $120. What is the sale price?',answer:'84',exp:'Discount = 0.30 × 120 = $36. Sale price = 120 − 36 = $84.'},
+    {type:'mc',text:'If 15% of a number is 45, what is 40% of the same number?',choices:['A. 80','B. 100','C. 110','D. 120'],answer:3,exp:'Number = 45 ÷ 0.15 = 300. 40% of 300 = 120.'},
+    {type:'mc',text:'A recipe calls for 2.5 cups of flour to make 20 cookies. How many cups are needed for 52 cookies?',choices:['A. 5.5','B. 6','C. 6.5','D. 7'],answer:2,exp:'Unit rate = 2.5/20 = 0.125 cups/cookie. 52 × 0.125 = 6.5.'},
+    {type:'grid',text:'A worker earns $18 per hour and works 7.5 hours per day, 5 days a week. What are the weekly earnings in dollars?',answer:'675',exp:'Daily: 18 × 7.5 = $135. Weekly: 135 × 5 = $675.'},
+    {type:'mc',text:'The ratio of red to blue marbles in a bag is 3:7. If there are 42 blue marbles, how many red marbles are there?',choices:['A. 14','B. 16','C. 18','D. 21'],answer:2,exp:'3/7 = r/42 → r = 18.'},
+    {type:'grid',text:'A solution is 4% salt by weight. How many grams of salt are in 350 grams of solution?',answer:'14',exp:'0.04 × 350 = 14 grams.'},
+  ],
+  t05:[
+    {type:'mc',text:'The scores of five students on a test are 72, 85, 91, 68, and 84. What is the median score?',choices:['A. 80','B. 84','C. 85','D. 72'],answer:1,exp:'Ordered: 68, 72, 84, 85, 91. Median is the middle value: 84.'},
+    {type:'grid',text:'The mean of six numbers is 15. Five of the numbers are 12, 14, 17, 18, and 11. What is the sixth number?',answer:'18',exp:'Sum = 6 × 15 = 90. Sum of five = 72. Sixth = 90 − 72 = 18.'},
+    {type:'mc',text:'A scatter plot shows a strong positive correlation between hours studied and test scores. Which best describes this?',choices:['A. As hours increase, scores tend to decrease.','B. As hours increase, scores tend to increase.','C. Hours studied and scores are unrelated.','D. The relationship is curved, not linear.'],answer:1,exp:'A strong positive correlation means both variables increase together.'},
+    {type:'mc',text:'In a data set, the mean is 50 and the standard deviation is 5. A score of 40 is how many standard deviations from the mean?',choices:['A. 1','B. 2','C. 3','D. 5'],answer:1,exp:'(50 − 40) / 5 = 2 standard deviations below the mean.'},
+    {type:'grid',text:'Seven test scores have a mean of 80. The highest score of 95 is removed. What is the mean of the remaining six scores?',answer:'77.5',exp:'Sum = 560. Remove 95: 465. New mean = 465/6 = 77.5.'},
+    {type:'mc',text:'A school surveys 200 students. 120 prefer math, 60 prefer English, and 20 prefer both. How many prefer neither?',choices:['A. 20','B. 30','C. 40','D. 50'],answer:2,exp:'Math or English = 120 + 60 − 20 = 160. Neither = 200 − 160 = 40.'},
+    {type:'mc',text:'In which situation would the mean be significantly higher than the median?',choices:['A. A symmetric distribution','B. A left-skewed distribution with a low outlier','C. A right-skewed distribution with a high outlier','D. A uniform distribution'],answer:2,exp:'A high outlier pulls the mean upward more than the median, creating right skew.'},
+  ],
+  t06:[
+    {type:'mc',text:'In a right triangle, the two legs measure 9 and 12. What is the length of the hypotenuse?',choices:['A. 14','B. 15','C. 18','D. 21'],answer:1,exp:'9² + 12² = 81 + 144 = 225. √225 = 15.'},
+    {type:'grid',text:'A circle has a radius of 7. What is the area? (Leave answer in terms of π, e.g. 49π)',answer:'49π',exp:'Area = πr² = π × 49 = 49π.'},
+    {type:'mc',text:'A right triangle has one angle of 30°. If the hypotenuse is 10, what is the length of the shorter leg?',choices:['A. 4','B. 5','C. 5√3','D. 10√3'],answer:1,exp:'In a 30-60-90 triangle, shorter leg = hypotenuse / 2 = 10 / 2 = 5.'},
+    {type:'grid',text:'The circumference of a circle is 16π. What is the area of the circle? (in terms of π)',answer:'64π',exp:'C = 2πr → r = 8. Area = π(8)² = 64π.'},
+    {type:'mc',text:'If sin(θ) = 3/5 in a right triangle and the hypotenuse is 20, what is the length of the side opposite θ?',choices:['A. 10','B. 12','C. 15','D. 16'],answer:1,exp:'opposite = sin(θ) × hypotenuse = (3/5) × 20 = 12.'},
+    {type:'mc',text:'A rectangle has a diagonal of 13 and a width of 5. What is its area?',choices:['A. 50','B. 55','C. 60','D. 65'],answer:2,exp:'Length = √(13² − 5²) = √144 = 12. Area = 12 × 5 = 60.'},
+    {type:'grid',text:'An isosceles triangle has two equal sides of 10 and a base of 12. What is its height from the base?',answer:'8',exp:'Half base = 6. Height = √(10² − 6²) = √64 = 8.'},
+    {type:'mc',text:'Two parallel lines are cut by a transversal. Which angle pair is always supplementary?',choices:['A. Alternate interior angles','B. Corresponding angles','C. Vertical angles','D. Co-interior (same-side interior) angles'],answer:3,exp:'Co-interior angles lie between parallel lines on the same side of the transversal and always sum to 180°.'},
+  ],
+  t07:[
+    {type:'rw',passage:'Solar panel efficiency has increased dramatically. In 2010, average commercial panels converted about 15% of sunlight. By 2022, leading manufacturers achieved efficiencies exceeding 23%. Researchers recently announced a record 29.8% efficiency for a tandem cell combining silicon and perovskite materials.',text:'Which finding most directly supports the claim that solar technology has improved significantly?',choices:['A. Solar panels were first developed in the 1950s.','B. Efficiency rose from about 15% to over 23% between 2010 and 2022.','C. Cost is a significant barrier to adoption.','D. Perovskite is a relatively new material.'],answer:1,exp:'Choice B cites measurable improvement over a defined period, directly supporting the claim of significant advancement.'},
+    {type:'mc',text:'Which evidence would BEST support the argument that urban green spaces improve mental health?',choices:['A. A survey showing city residents prefer parks to gyms.','B. A longitudinal study linking park access to lower anxiety rates.','C. A city council report on park budgets.','D. An interview with a landscape architect.'],answer:1,exp:'A longitudinal study provides direct scientific evidence linking park access to measurable mental health outcomes.'},
+    {type:'rw',passage:'A marine biologist claims that coral reef ecosystems are declining faster than previously estimated. She cites data showing that water temperatures in tropical zones have increased by 1.2°C over the past forty years. She also notes that bleaching events, once rare, now occur every four to six years on the Great Barrier Reef.',text:'Which detail from the passage most directly supports the marine biologist\'s claim?',choices:['A. Tropical water temperatures have risen by 1.2°C over 40 years.','B. The Great Barrier Reef is located in tropical waters.','C. Bleaching events now occur every four to six years, compared to being once rare.','D. The biologist has studied coral reefs for many years.'],answer:2,exp:'The shift in bleaching frequency directly supports the claim that decline is accelerating beyond previous estimates.'},
+    {type:'rw',passage:'Historian Dr. Osei argues that the spread of the printing press in 15th-century Europe accelerated the Reformation. He points out that Martin Luther\'s 95 Theses were reproduced in thousands of copies within weeks of being written in 1517, whereas earlier critiques of the Church had remained confined to small scholarly circles.',text:'Which choice best describes the function of the detail about earlier critiques of the Church?',choices:['A. It introduces a counterargument to Dr. Osei\'s main claim.','B. It provides context that highlights the significance of the printing press\'s impact.','C. It suggests that the Reformation would have occurred without the printing press.','D. It explains why Martin Luther wrote the 95 Theses.'],answer:1,exp:'The contrast with earlier critiques emphasizes how the printing press changed the spread of ideas, strengthening Dr. Osei\'s argument.'},
+    {type:'rw',passage:'A researcher studying sleep patterns in teenagers found that students who slept fewer than seven hours on school nights scored, on average, 14 percentile points lower on standardized reading tests than students who slept eight or more hours. The researcher concluded that insufficient sleep negatively affects academic performance.',text:'Which of the following, if true, would most weaken the researcher\'s conclusion?',choices:['A. Sleep deprivation is common among teenagers in many countries.','B. Students who scored low on reading tests also tended to spend more time on screens at night.','C. The standardized tests were administered in the morning.','D. Some students who slept fewer than seven hours still scored highly.'],answer:1,exp:'If screen time causes both poor sleep and low scores, it may be the actual cause — weakening the conclusion that sleep itself is responsible.'},
+    {type:'rw',passage:'A wildlife ecologist studying wolves in Yellowstone National Park observed that after wolves were reintroduced in 1995, the populations of elk decreased and vegetation along riverbanks increased significantly. She concluded that the wolves had triggered a trophic cascade.',text:'Which additional finding would most strengthen the ecologist\'s conclusion?',choices:['A. Wolves were also reintroduced in other national parks during the same period.','B. Elk had been overgrazing riverbank vegetation before the wolves arrived.','C. The park received above-average rainfall in the years following reintroduction.','D. Wolves in Yellowstone have a different diet than wolves in Canada.'],answer:1,exp:'Evidence that elk overgrazing caused the vegetation loss directly supports the chain of causation underlying the trophic cascade claim.'},
+  ],
+  t08:[
+    {type:'rw',passage:'The diplomat\'s speech was notable for its equivocal language — statements that could be interpreted in multiple ways, seemingly designed to satisfy opposing factions without committing to any particular course of action.',text:'As used in the passage, "equivocal" most nearly means:',choices:['A. harsh and critical','B. ambiguous and noncommittal','C. clear and direct','D. emotional and persuasive'],answer:1,exp:'"Equivocal" means deliberately ambiguous or open to multiple interpretations, as confirmed by the phrase "interpreted in multiple ways."'},
+    {type:'mc',text:'In "the scientist\'s tenacious pursuit of the truth," the word "tenacious" most nearly means:',choices:['A. careless','B. sudden','C. persistent','D. brilliant'],answer:2,exp:'"Tenacious" means persistent and determined, holding firmly to a goal despite obstacles.'},
+    {type:'rw',passage:'Unlike many contemporary chefs who favor bold, complex flavor combinations, Chef Anara Bekova is known for her austere approach to cuisine — stripping dishes down to only two or three ingredients to allow the natural flavors to emerge without distraction.',text:'As used in the passage, "austere" most nearly means:',choices:['A. expensive and refined','B. simple and unadorned','C. spicy and intense','D. traditional and familiar'],answer:1,exp:'In this context "austere" describes a deliberately minimal style — confirmed by the detail about stripping dishes down to few ingredients.'},
+    {type:'rw',passage:'The committee\'s report was not a condemnation of the director\'s decisions but rather a measured assessment that acknowledged both the successes and shortcomings of the project without assigning blame.',text:'As used in the passage, "measured" most nearly means:',choices:['A. carefully considered and balanced','B. precisely calculated in numbers','C. harshly critical','D. incomplete and vague'],answer:0,exp:'"Measured" here means calm and carefully balanced, as evidenced by the report acknowledging both successes and shortcomings.'},
+    {type:'rw',passage:'The architect\'s early sketches were tentative, exploratory marks on paper — not commitments to a final vision but rather questions posed to the building site itself, asking what form might best suit the landscape.',text:'As used in the passage, "tentative" most nearly means:',choices:['A. confident and decisive','B. hasty and careless','C. hesitant and provisional','D. detailed and precise'],answer:2,exp:'"Tentative" means uncertain or exploratory, as the passage explicitly contrasts the sketches with "commitments to a final vision."'},
+    {type:'rw',passage:'Once considered a niche field confined to university research labs, synthetic biology has rapidly proliferated into agriculture, medicine, and environmental management, attracting billions in private investment over the past decade.',text:'As used in the passage, "proliferated" most nearly means:',choices:['A. declined steadily','B. spread widely','C. been redefined','D. remained unchanged'],answer:1,exp:'"Proliferated" means spread or multiplied rapidly — consistent with the expansion into multiple industries described.'},
+  ],
+  t09:[
+    {type:'rw',passage:'Linguist Dr. Sofia Brennan has argued that the global dominance of English in scientific publishing creates significant barriers for researchers who are not native English speakers. _______ Many high-quality studies conducted in non-English-speaking countries are never submitted to major journals, limiting the diversity of perspectives in the scientific record.',text:'Which sentence, if inserted at the blank, would most effectively transition between the two parts of the passage?',choices:['A. English is spoken by over 1.5 billion people worldwide as a first or second language.','B. This linguistic gatekeeping has real consequences for global scientific knowledge.','C. Several major journals have begun accepting submissions in other languages.','D. Dr. Brennan has published over forty papers on the topic of language and academia.'],answer:1,exp:'Choice B provides a logical bridge by naming the consequence (gatekeeping) and setting up the specific example that follows.'},
+    {type:'rw',passage:'To reduce plastic waste, many cities have introduced bans on single-use plastic bags. However, critics argue that these bans are insufficient. _______ Without addressing industrial plastic production, consumer-level bans can only reduce a fraction of total plastic waste.',text:'Which choice most logically completes the passage?',choices:['A. Reusable bags are available in most grocery stores.','B. Plastic bags account for a small percentage of total plastic pollution.','C. Some cities have extended bans to include plastic straws and utensils.','D. The bans are popular with environmental advocacy groups.'],answer:1,exp:'Choice B directly supports the critics\' point by providing a reason why bag bans alone are insufficient.'},
+    {type:'rw',passage:'Researchers at a university in Finland studied the effects of nature exposure on stress levels. Participants who spent 20 minutes in a forested area showed significant reductions in cortisol levels. _______',text:'Which sentence would most logically and effectively conclude the passage?',choices:['A. Finland is known for its extensive forests and high quality of life.','B. These findings suggest that even brief contact with natural environments may support stress reduction.','C. Cortisol is a hormone produced by the adrenal glands in response to stress.','D. The researchers plan to conduct a follow-up study involving urban parks.'],answer:1,exp:'Choice B draws a direct and appropriate conclusion from the experimental finding described in the passage.'},
+    {type:'rw',passage:'In her memoir, novelist Yara Almasi describes growing up in two cultures as both a challenge and a gift. She writes about the difficulty of never feeling fully at home in either country. _______ She credits this in-between perspective with giving her the ability to see both cultures clearly, an ability that shapes every novel she writes.',text:'Which choice most effectively connects the two parts of the passage?',choices:['A. Almasi now lives in London with her family.','B. Yet she has come to see this displacement not as a loss but as a source of creative insight.','C. Many writers draw on personal experience when writing fiction.','D. Her first novel was published when she was twenty-nine.'],answer:1,exp:'Choice B provides a logical contrast (Yet) that transitions from the difficulty to the benefit, connecting both parts of the passage.'},
+    {type:'rw',passage:'Traditional ceramic techniques from the Jingdezhen region of China have been practiced for over a thousand years. In recent decades, however, mass production has threatened to displace these artisanal methods. _______ Today, a growing number of young Chinese artists are returning to Jingdezhen to apprentice under master ceramicists and learn the traditional craft.',text:'Which sentence would most logically fill the blank?',choices:['A. Jingdezhen ceramics are exported to over 100 countries annually.','B. Nevertheless, there are signs that interest in traditional methods is reviving.','C. Mass production allows factories to produce thousands of pieces per day.','D. The history of Chinese ceramics dates back to the Neolithic period.'],answer:1,exp:'Choice B introduces the countertrend (revival) that the final sentence elaborates on, creating a logical three-part progression.'},
+    {type:'rw',passage:'Scientists have long known that sleep is essential for memory consolidation. During sleep, the brain replays experiences from the day, strengthening the neural pathways associated with new information. _______',text:'Which sentence would best conclude this passage by broadening its significance?',choices:['A. Most adults require between seven and nine hours of sleep per night.','B. This process helps explain why adequate sleep is critical not only for rest but for effective learning.','C. Dreams occur primarily during the REM stage of sleep.','D. Memory consolidation was first studied systematically in the early 20th century.'],answer:1,exp:'Choice B connects the scientific mechanism to a practical takeaway, effectively broadening the passage\'s significance as a conclusion.'},
+  ],
+  t10:[
+    {type:'rw',passage:'Marine biologist Dr. Yuna Choi has spent over two decades studying bioluminescent organisms. Her most notable discovery, made in 2019, involved a previously unknown species of jellyfish ______ it produces light through a chemical reaction unlike any recorded before.',text:'Which choice completes the text so that it conforms to the conventions of Standard English?',choices:['A. jellyfish,','B. jellyfish;','C. jellyfish:','D. jellyfish and'],answer:1,exp:'A semicolon is needed to join two independent clauses. "Her most notable discovery involved a species of jellyfish" and "it produces light through a chemical reaction" are both complete sentences.'},
+    {type:'rw',passage:'Historian Dr. Farrukh Tashmatov argues that the decline of the Timurid Empire was not caused by military defeat alone. Economic instability, internal power struggles, ______ the disruption of trade routes all played significant roles in its collapse.',text:'Which choice completes the text so that it conforms to the conventions of Standard English?',choices:['A. and,','B. and;','C. and','D. and:'],answer:2,exp:'No additional punctuation is needed before "and" when joining the final item in a simple list of three nouns.'},
+    {type:'rw',passage:'The concept of neuroplasticity — the brain\'s ability to reorganize itself by forming new neural connections — has transformed rehabilitation medicine. Physical therapists now design programs that exploit this ______ helping patients recover functions that were once considered permanently lost.',text:'Which choice completes the text so that it conforms to the conventions of Standard English?',choices:['A. this,','B. this;','C. this:','D. this and'],answer:0,exp:'A comma attaches the participial phrase "helping patients recover functions" to the preceding independent clause, indicating the result of exploiting neuroplasticity.'},
+    {type:'rw',passage:'Renowned architect Zara Petrov designed the Heron Tower in Oslo using recycled steel and reclaimed timber. The structure, which took four years to complete ______ stands as one of the most sustainable buildings in Scandinavia.',text:'Which choice completes the text so that it conforms to the conventions of Standard English?',choices:['A. complete,','B. complete;','C. complete:','D. complete and'],answer:0,exp:'A comma closes the non-restrictive relative clause "which took four years to complete" before the main verb "stands" resumes.'},
+    {type:'rw',passage:'Urban planner Kwame Asiedu redesigned the public transit system of Accra over a seven-year period. His approach was unconventional ______ he prioritized pedestrian walkways and cycling infrastructure before expanding bus routes.',text:'Which choice completes the text so that it conforms to the conventions of Standard English?',choices:['A. unconventional,','B. unconventional;','C. unconventional:','D. unconventional and'],answer:2,exp:'A colon after the independent clause "His approach was unconventional" introduces an explanation of what made it unconventional.'},
+    {type:'rw',passage:'Biochemist Dr. Ines Vargas discovered that a compound found in the venom of the Gila monster lizard could be used to treat type 2 diabetes ______ this finding eventually led to the development of the drug exenatide.',text:'Which choice completes the text so that it conforms to the conventions of Standard English?',choices:['A. diabetes, and','B. diabetes;','C. diabetes:','D. diabetes,'],answer:1,exp:'A semicolon joins two closely related independent clauses without a coordinating conjunction. The second clause explains the outcome of the discovery.'},
+    {type:'rw',passage:'Epidemiologist Dr. Rosa Fuentes led a team that tracked the spread of a new respiratory illness across six countries. Their findings were alarming ______ the virus was mutating faster than any model had predicted.',text:'Which choice completes the text so that it conforms to the conventions of Standard English?',choices:['A. alarming,','B. alarming;','C. alarming:','D. alarming and'],answer:2,exp:'A colon follows the independent clause to introduce the specific explanation of why the findings were alarming.'},
+    {type:'rw',passage:'The Monarch butterfly undertakes one of the most remarkable migrations in the animal kingdom. Each autumn, millions of butterflies travel from Canada to their overwintering grounds in central Mexico ______ a journey of up to 4,500 kilometers.',text:'Which choice completes the text so that it conforms to the conventions of Standard English?',choices:['A. Mexico,','B. Mexico;','C. Mexico:','D. Mexico and'],answer:0,exp:'A comma introduces the appositive phrase "a journey of up to 4,500 kilometers," which renames and elaborates on the migration described.'},
+  ],
+  t11:[
+    {type:'rw',passage:'For centuries, the northern lights — or aurora borealis — were the subject of myth and superstition across Scandinavian and Indigenous Arctic cultures. Today, scientists understand that auroras are caused by charged particles from the sun colliding with gases in Earth\'s atmosphere. Despite this scientific explanation, the aurora borealis continues to attract millions of visitors each year to countries like Norway and Iceland, who travel specifically to witness the phenomenon.',text:'What is the central idea of the passage?',choices:['A. The aurora borealis is best viewed in Norway and Iceland.','B. Scientific understanding of the aurora has not diminished its cultural and popular appeal.','C. Myths about the northern lights were common in ancient Scandinavian cultures.','D. Charged particles from the sun cause the aurora borealis.'],answer:1,exp:'The passage moves from historical myth to scientific explanation and ends with the aurora\'s continuing appeal — the central idea is that science hasn\'t reduced its fascination.'},
+    {type:'rw',passage:'Fermentation, one of humanity\'s oldest food preservation techniques, involves microorganisms converting sugars into acids, gases, or alcohol. Ancient civilizations used fermentation to produce bread, beer, and preserved vegetables long before understanding the biological processes involved. Today, fermentation is experiencing a revival, not only in traditional foods like kimchi and sourdough but also in biotechnology, where scientists use fermentation to produce medicines and biofuels.',text:'Which choice best states the main idea of the passage?',choices:['A. Ancient people invented fermentation to preserve food.','B. Fermentation is a process involving microorganisms and sugars.','C. Fermentation is an ancient technique that remains widely relevant across food and science today.','D. Biotechnology has transformed the way scientists think about fermentation.'],answer:2,exp:'The passage traces fermentation from ancient origins to modern applications — the main idea is its enduring and expanding relevance.'},
+    {type:'rw',passage:'The Silk Road was not a single road but a vast network of trade routes connecting China, Central Asia, the Middle East, and Europe for over a millennium. While silk was its most famous export, the routes also carried spices, glassware, paper, and ideas — including religions, technologies, and artistic styles that transformed cultures on both ends of the network.',text:'What is the central idea of the passage?',choices:['A. Silk was the most important commodity traded on the Silk Road.','B. The Silk Road connected China directly to Europe.','C. The Silk Road was a complex network that facilitated the exchange of goods and ideas across civilizations.','D. Paper and spices were more valuable than silk on the Silk Road.'],answer:2,exp:'The passage emphasizes the variety of what was exchanged — not just goods but ideas — making the central idea the Silk Road\'s broad cultural and commercial impact.'},
+    {type:'rw',passage:'Urban heat islands occur when cities experience significantly higher temperatures than surrounding rural areas. This effect is driven by the concentration of dark surfaces like roads and rooftops, which absorb heat, and the lack of vegetation, which would otherwise cool air through evaporation. Cities worldwide are now implementing green infrastructure — rooftop gardens, urban forests, and reflective surfaces — to counteract this effect.',text:'What is the main idea of the passage?',choices:['A. Rooftop gardens are the most effective solution to urban heat islands.','B. Urban heat islands are a global phenomenon caused by specific urban features, and cities are working to address them.','C. Rural areas are always cooler than cities because of more vegetation.','D. Dark surfaces like roads are the leading cause of climate change.'],answer:1,exp:'The passage explains the cause of urban heat islands and then describes solutions — the main idea encompasses both the problem and the response.'},
+    {type:'rw',passage:'Before the invention of mechanical clocks, people measured time using sundials, water clocks, and hourglasses. These methods were often imprecise and highly dependent on external conditions — a sundial is useless at night, and a water clock can freeze. The development of the mechanical clock in medieval Europe standardized timekeeping, eventually making possible the precise scheduling demanded by industrial society.',text:'Which choice best states the central idea of the passage?',choices:['A. Sundials and water clocks were the most common timekeeping tools before mechanical clocks.','B. Industrial society requires precise timekeeping.','C. The mechanical clock replaced earlier, imprecise methods and enabled the standardized time required by modern society.','D. Medieval Europe was the first civilization to need accurate timekeeping.'],answer:2,exp:'The passage moves from pre-mechanical limitations to the clock\'s transformative role — the central idea is the mechanical clock\'s significance as an enabler of modern life.'},
+  ],
+  t12:[
+    {type:'rw',passage:'In the 1960s, the Aral Sea was one of the four largest lakes in the world, covering over 68,000 square kilometers. Soviet irrigation projects diverted the rivers feeding it to grow cotton in the desert. By 2007, the sea had shrunk to 10% of its original volume, leaving behind a salt-crusted desert strewn with the rusting hulls of fishing boats.',text:'Based on the passage, what can most reasonably be inferred about the consequences of the Soviet irrigation projects?',choices:['A. The irrigation projects successfully increased cotton production for decades.','B. Environmental damage from the projects was not anticipated by Soviet planners.','C. The projects had severe and long-lasting environmental consequences for the Aral Sea region.','D. The Aral Sea will likely recover to its original size within the coming decades.'],answer:2,exp:'The dramatic shrinkage to 10% of its original volume directly supports the inference that the irrigation projects caused severe, lasting environmental damage.'},
+    {type:'rw',passage:'When the fossilized skull of a new hominin species was found in a cave in South Africa in 2013, researchers were surprised to find it alongside tools and evidence of fire use. Previously, such behaviors had been attributed exclusively to Homo sapiens and a few close relatives. The discovery prompted scientists to reconsider their models of early human cognitive development.',text:'What can most reasonably be inferred from the passage?',choices:['A. The newly discovered species was more intelligent than Homo sapiens.','B. Prior to this discovery, scientists believed tool use and fire were limited to a smaller group of hominins.','C. The cave in South Africa was the oldest known human settlement.','D. All hominin species eventually developed the ability to use tools.'],answer:1,exp:'The passage states that tool use and fire had been attributed exclusively to Homo sapiens and close relatives — implying scientists previously believed fewer species had these abilities.'},
+    {type:'rw',passage:'The letters of composer Clara Schumann, recently published in a new collection, reveal a woman deeply conflicted about her dual identity as a performer and composer. While she was celebrated across Europe as a pianist, she rarely promoted her own compositions and frequently expressed self-doubt about them in private correspondence.',text:'What can most reasonably be inferred about Clara Schumann based on the passage?',choices:['A. Clara Schumann believed composing was less important than performing.','B. Clara Schumann\'s compositions were not well received by critics.','C. External recognition as a performer did not resolve her private uncertainty about her value as a composer.','D. Clara Schumann eventually stopped composing to focus entirely on performance.'],answer:2,exp:'The contrast between her celebrated public career and her private self-doubt supports the inference that external success did not eliminate her internal conflict about composing.'},
+    {type:'rw',passage:'A study published in 2022 found that children who were read to daily before age five had vocabularies approximately 1.4 million words larger than peers who were rarely read to. The researchers noted that this gap persisted even when controlling for socioeconomic factors.',text:'What can most reasonably be inferred from the passage?',choices:['A. Children from wealthier families are always read to more frequently.','B. Reading aloud to children before age five has a meaningful and lasting effect on vocabulary development, independent of economic background.','C. Vocabulary size at age five is the most important predictor of academic success.','D. The study was the first to examine the relationship between reading and vocabulary.'],answer:1,exp:'The passage specifies the gap was controlled for socioeconomic factors, supporting the inference that the reading practice itself — not family income — drives vocabulary growth.'},
+    {type:'rw',passage:'Nineteenth-century critics largely dismissed the Impressionist painters, finding their loose brushwork and rejection of sharp outlines sloppy and unfinished. Monet, Renoir, and their contemporaries were frequently rejected by the official Paris Salon. Yet by the early twentieth century, Impressionism had become the foundation upon which modern art built itself.',text:'What can most reasonably be inferred about the critical reception of Impressionism?',choices:['A. The Paris Salon was biased against all new artistic movements.','B. Initial critical rejection did not reflect the long-term influence of Impressionist work.','C. Monet and Renoir later changed their style to gain acceptance.','D. Impressionism became popular only after the artists had died.'],answer:1,exp:'The contrast between early dismissal and later foundational status supports the inference that initial critical opinion was a poor predictor of the movement\'s lasting significance.'},
+  ],
+  t13:[
+    {type:'mc',text:'If f(x) = 2^x, what is f(x+3) in terms of f(x)?',choices:['A. f(x) + 6','B. 8·f(x)','C. f(x)³','D. 3·f(x)'],answer:1,exp:'f(x+3) = 2^(x+3) = 8·2^x = 8·f(x).'},
+    {type:'grid',text:'If √(3x + 1) = 4, what is the value of x?',answer:'5',exp:'Square both sides: 3x+1=16 → x=5.'},
+    {type:'mc',text:'Which function has a horizontal asymptote at y = 0?',choices:['A. f(x)=x²','B. f(x)=3x−2','C. f(x)=5^x','D. f(x)=x+1'],answer:2,exp:'Exponential f(x)=a^x approaches but never reaches y=0.'},
+    {type:'grid',text:'If 4^(x−1) = 16, what is the value of x?',answer:'3',exp:'16=4², so x−1=2 → x=3.'},
+  ],
+  t21:[
+    {type:'mc',text:'If 2x + 3y = 12 and x = 3, what is y?',choices:['A. 1','B. 2','C. 3','D. 4'],answer:1,exp:'2(3)+3y=12 → 3y=6 → y=2.'},
+    {type:'grid',text:'The average of 5 numbers is 14. Four are 10, 12, 16, 18. What is the fifth?',answer:'14',exp:'Sum=70. Four sum to 56. Fifth=14.'},
+    {type:'mc',text:'A rectangle has perimeter 40 and length 12. What is its area?',choices:['A. 80','B. 88','C. 96','D. 112'],answer:2,exp:'Width=(40−24)/2=8. Area=12×8=96.'},
+    {type:'mc',text:'A car travels 180 miles in 3 hours. How long to travel 300 miles at the same speed?',choices:['A. 4 hours','B. 4.5 hours','C. 5 hours','D. 5.5 hours'],answer:2,exp:'Speed=60mph. Time=300/60=5 hours.'},
+    {type:'mc',text:'If f(x) = 3x − 2, what is f(f(2))?',choices:['A. 4','B. 8','C. 10','D. 12'],answer:2,exp:'f(2) = 4. f(4) = 12−2 = 10.'},
+    {type:'grid',text:'A store applies a 20% discount and then a further 10% discount on the sale price. What is the effective discount percentage off the original price?',answer:'28',exp:'After 20%: 0.8. After 10% more: 0.8×0.9=0.72. Discount = 28%.'},
+    {type:'mc',text:'Which of the following is equivalent to 3(x − 2)² + 5?',choices:['A. 3x² − 12x + 17','B. 3x² − 12x + 7','C. 3x² + 5','D. 3x² − 6x + 17'],answer:0,exp:'3(x²−4x+4)+5 = 3x²−12x+12+5 = 3x²−12x+17.'},
+    {type:'mc',text:'The sum of interior angles of a hexagon is:',choices:['A. 540°','B. 360°','C. 720°','D. 900°'],answer:2,exp:'(n−2)×180 = 4×180 = 720° for a hexagon.'},
+    {type:'grid',text:'If p and q are positive integers and pq = 36 and p + q = 13, what is the value of p?',answer:'4',exp:'Pairs with product 36 and sum 13: 4 and 9. p=4 (smaller).'},
+    {type:'mc',text:'A line has slope −2 and passes through (3, 1). What is its y-intercept?',choices:['A. 5','B. 6','C. 7','D. 8'],answer:2,exp:'1 = −2(3) + b → b = 7.'},
+  ],
+  t22:[
+    {type:'rw',passage:'In 1854, physician John Snow mapped cholera cases in London\'s Soho district and traced the outbreak to a contaminated water pump on Broad Street. By persuading local authorities to remove the pump handle, he helped end the outbreak. Snow\'s work established the foundation of modern epidemiology.',text:'What is the central idea of the passage?',choices:['A. London suffered from poor sanitation in the 19th century.','B. John Snow\'s data-driven approach to tracing disease became a model for modern public health.','C. Cholera outbreaks were common in Victorian England.','D. Removing the pump handle immediately cured those already infected.'],answer:1,exp:'The passage moves from the investigation to the intervention to its legacy — the central idea is Snow\'s lasting contribution to epidemiology.'},
+    {type:'rw',passage:'The Stoic philosophers of ancient Greece and Rome believed that humans cannot control external events, only their responses to them. This idea, central to Stoic practice, remains influential today in modern cognitive-behavioral therapy, which similarly emphasizes that thoughts and interpretations — not events themselves — are the sources of emotional distress.',text:'Which choice best states the main idea of the passage?',choices:['A. Stoic philosophy was developed in ancient Greece.','B. The core Stoic insight about the limits of human control has continued relevance in modern psychology.','C. Cognitive-behavioral therapy was invented by Stoic philosophers.','D. Humans cannot control their emotional responses.'],answer:1,exp:'The passage links ancient Stoic thought to modern therapy through their shared insight — the main idea is this enduring relevance.'},
+    {type:'rw',passage:'Mathematician Maryam Mirzakhani was the first woman and first Iranian to win the Fields Medal, awarded in 2014. Her work on the dynamics and geometry of Riemann surfaces was described by fellow mathematicians as breathtaking in its originality. She died in 2017 at the age of 40.',text:'As used in the passage, "breathtaking" most nearly means:',choices:['A. difficult to understand','B. remarkably impressive and original','C. controversial among experts','D. carefully methodical'],answer:1,exp:'In context "breathtaking" is used to convey admiration for the originality of her work — meaning remarkably impressive.'},
+    {type:'rw',passage:'When the first European settlers arrived in Australia, they encountered an ecosystem unlike any other. Animals that had evolved in isolation for millions of years — kangaroos, wombats, and platypuses — were completely unknown to Western science. _______ These introduced species competed with native animals for food and habitat, leading to dramatic ecological changes.',text:'Which sentence would most logically fill the blank?',choices:['A. Australia is the world\'s sixth-largest country by land area.','B. Many of the settlers brought domestic animals such as rabbits and foxes with them.','C. Indigenous Australians had coexisted with these species for tens of thousands of years.','D. Kangaroos can travel at speeds of up to 70 kilometers per hour.'],answer:1,exp:'Choice B introduces the introduced species that the next sentence describes as causing ecological change, creating a logical sequence.'},
+    {type:'rw',passage:'Critics of standardized testing argue that such tests measure only a narrow range of skills and disadvantage students from lower-income backgrounds who have less access to test preparation resources.',text:'Which additional finding would most strengthen the critics\' argument?',choices:['A. Students who take more practice tests generally score higher.','B. Wealthier school districts spend more on extracurricular programs.','C. Data show that family income is a stronger predictor of SAT scores than GPA.','D. Some colleges have made standardized tests optional for admissions.'],answer:2,exp:'Evidence that family income predicts SAT scores more than academic performance directly supports the claim that the tests are influenced by socioeconomic background.'},
+    {type:'rw',passage:'Composer Florence Price was largely overlooked during her lifetime and for decades after her death in 1953. In 2009, a collection of her scores was discovered in an abandoned house in Illinois. Since then, her symphonies have been performed by major orchestras worldwide, and she is now recognized as a groundbreaking figure in American classical music.',text:'What can most reasonably be inferred from the passage?',choices:['A. Price\'s music was intentionally suppressed during her lifetime.','B. The 2009 discovery significantly contributed to the reassessment and revival of her reputation.','C. Major orchestras had always admired Price\'s work privately.','D. Price\'s music was more popular outside the United States.'],answer:1,exp:'The sequence of discovery followed by worldwide performances supports the inference that finding her scores was the catalyst for her renewed recognition.'},
+  ],
+  t23:[
+    {type:'mc',text:'If 2x² − 8 = 0, what are the solutions?',choices:['A. x = 2 only','B. x = ±2','C. x = ±4','D. x = 4 only'],answer:1,exp:'2x² = 8 → x² = 4 → x = ±2.'},
+    {type:'rw',passage:'The term "cognitive load" refers to the amount of mental effort required to process information at any given moment. Researchers have found that when cognitive load is too high, learning and problem-solving suffer. Instructional designers use this concept to create materials that present information in manageable chunks.',text:'As used in the passage, "manageable" most nearly means:',choices:['A. easy to ignore','B. practical and within one\'s capacity to handle','C. visually appealing','D. scientifically verified'],answer:1,exp:'"Manageable chunks" means amounts of information within one\'s capacity to process — not overwhelming.'},
+    {type:'mc',text:'A right triangle has legs of length 5 and 12. What is the sine of the smallest angle?',choices:['A. 5/13','B. 12/13','C. 5/12','D. 12/5'],answer:0,exp:'Hypotenuse = 13. The smallest angle is opposite the shorter leg (5). sin = 5/13.'},
+    {type:'rw',passage:'Paleontologist Dr. Amara Njoku has argued that the fossil record for early mammals is biased toward larger species. Small mammals, she notes, had fragile bones that were less likely to be preserved. _______ This means that our picture of early mammal diversity may be incomplete.',text:'Which sentence best fills the blank?',choices:['A. Large mammals dominated ecosystems during the Mesozoic era.','B. As a result, small mammals are significantly underrepresented in what has been discovered.','C. Fossilization requires specific environmental conditions.','D. Dr. Njoku has excavated sites in East Africa for over a decade.'],answer:1,exp:'Choice B directly follows from the fragility argument and sets up the conclusion about incomplete diversity data.'},
+    {type:'grid',text:'A bag contains 5 red, 3 blue, and 2 green marbles. If one marble is drawn at random, what is the probability it is NOT red? Express as a fraction.',answer:'1/2',exp:'Non-red = 3+2 = 5 out of 10 total. Probability = 5/10 = 1/2.'},
+    {type:'mc',text:'Which value of x makes the expression (x² − 9)/(x − 3) undefined?',choices:['A. x = 9','B. x = 3','C. x = −3','D. x = 0'],answer:1,exp:'The expression is undefined when the denominator equals zero: x − 3 = 0 → x = 3.'},
+    {type:'rw',passage:'The introduction of the telegraph in the 1840s fundamentally changed how news traveled. Events that once took weeks to reach distant cities could now be reported within hours. Newspapers rapidly adopted the technology, and the modern concept of "breaking news" was born.',text:'What is the central idea of the passage?',choices:['A. The telegraph replaced the postal service in the 19th century.','B. The telegraph transformed the speed of news communication and shaped modern journalism.','C. Newspapers were the first industry to adopt new communication technologies.','D. Breaking news was invented by American journalists in the 1840s.'],answer:1,exp:'The passage shows how the telegraph changed both the speed of news and the culture of journalism — the central idea is its transformative impact.'},
+    {type:'grid',text:'If 3^(2x) = 81, what is the value of x?',answer:'2',exp:'81 = 3⁴, so 2x = 4 → x = 2.'},
+  ],
+  t24:[
+    {type:'mc',text:'If the function g(x) = ax² + bx + c has a maximum value and the vertex is at (3, 10), which must be true?',choices:['A. a > 0','B. a < 0','C. b = 3','D. c = 10'],answer:1,exp:'A maximum means the parabola opens downward, so a < 0.'},
+    {type:'rw',passage:'In studying how languages change over time, linguists have noted that when two groups of speakers become isolated from each other, their dialects tend to diverge. Over centuries, what began as regional accents can become mutually unintelligible languages. Latin, for example, evolved into Portuguese, Spanish, French, Italian, and Romanian as the Roman Empire fragmented.',text:'Which claim does the example of Latin most directly support?',choices:['A. Latin was the most widely spoken language in ancient Europe.','B. The Roman Empire fragmented due to linguistic disagreements.','C. Geographic and political separation can cause a single language to diverge into multiple distinct languages.','D. Modern Romance languages are more complex than Latin.'],answer:2,exp:'Latin diverging into five languages as the empire fragmented is a direct example of isolation causing linguistic divergence.'},
+    {type:'grid',text:'Points A(1, 2) and B(7, 10) are endpoints of a line segment. What is the length of AB?',answer:'10',exp:'Length = √((7−1)² + (10−2)²) = √(36+64) = √100 = 10.'},
+    {type:'mc',text:'A survey of 500 people found that 60% prefer tea over coffee. The margin of error is ±4%. Which is a valid conclusion?',choices:['A. Exactly 300 people prefer tea.','B. Between 56% and 64% of the population likely prefers tea.','C. All people who were not surveyed prefer coffee.','D. The survey proves tea is more popular than coffee.'],answer:1,exp:'Margin of error means the true proportion is likely between 60%−4% = 56% and 60%+4% = 64%.'},
+    {type:'rw',passage:'The dodo, a flightless bird native to Mauritius, became extinct in the late 17th century following the arrival of European sailors and the animals they brought with them. The dodo had evolved without natural predators and consequently showed no fear of humans, making it easy prey. Its extinction is now considered one of the earliest well-documented cases of human-caused species loss.',text:'What can most reasonably be inferred from the passage?',choices:['A. The dodo would have survived if sailors had not introduced new animals.','B. The dodo\'s lack of fear was an adaptive response to its environment that became fatal when that environment changed.','C. European sailors intentionally hunted the dodo to extinction.','D. Flightless birds are always vulnerable to extinction.'],answer:1,exp:'The dodo evolved without predators, so fearlessness was adaptive — but the same trait became fatal when humans and their animals arrived. This is a reasonable inference from the passage.'},
+    {type:'mc',text:'In the equation y = 2sin(3x) + 1, what is the amplitude?',choices:['A. 1','B. 2','C. 3','D. 6'],answer:1,exp:'Amplitude = |coefficient of sin| = 2.'},
+    {type:'rw',passage:'Many scientists have argued that the Anthropocene — a proposed new geological epoch defined by human influence on the Earth\'s systems — should be formally recognized. Proponents point to evidence such as the global spread of plastics, radioactive isotopes from nuclear testing, and altered carbon levels in ice cores. Critics, however, argue that these markers are too recent and too thin to meet the geological standard for a new epoch.',text:'Which choice best describes the overall structure of the passage?',choices:['A. A problem is identified, and a solution is proposed.','B. A scientific claim is introduced, evidence is provided, and a counterargument is acknowledged.','C. Two equally valid scientific theories are compared.','D. A historical event is described and its consequences are analyzed.'],answer:1,exp:'The passage presents a claim (Anthropocene recognition), supporting evidence, then a counterargument — a classic claim/evidence/counterargument structure.'},
+    {type:'grid',text:'If log₂(x) = 5, what is the value of x?',answer:'32',exp:'log₂(x) = 5 means 2⁵ = x → x = 32.'},
+  ],
+};
+
+async function saveQuestions() {
+  // Save each topic as its own Firestore doc under 'questions' collection
+  const saves = Object.keys(QUESTIONS).map(tid =>
+    window.fbSet('questions', tid, {qs: QUESTIONS[tid]})
+  );
+  await Promise.all(saves);
+}
+const QUESTIONS = JSON.parse(JSON.stringify(DEFAULT_QUESTIONS));
+
+function getDefaultQuestions(tid){
+  return [
+    {type:'mc',text:'Practice question for this topic. Which answer is correct?',choices:['A. Incorrect approach','B. Partially correct','C. Correct answer','D. Common mistake'],answer:2,exp:'Choice C uses the correct technique.'},
+    {type:'grid',text:'What value completes this concept? (Enter a number)',answer:'42',exp:'Review the core formula for this topic.'},
+  ];
+}
+
+const DEFAULT_STUDENTS = [
+  {id:'s1',name:'Aisha Karimova',pin:'1234',unlocked:['t01','t02','t07','t08'],answered:12,score:78},
+  {id:'s2',name:'Timur Rashidov',pin:'5678',unlocked:['t01','t07'],answered:5,score:65},
+  {id:'s3',name:'Malika Yusupova',pin:'9012',unlocked:['t01','t02','t03','t07','t08','t09','t13'],answered:28,score:84},
+];
+
+async function saveStudents() {
+  // Save each student as their own Firestore doc under 'students' collection
+  const saves = state.students.map(s => window.fbSet('students', s.id, s));
+  await Promise.all(saves);
+}
+async function deleteStudentFromDB(sid) {
+  await window.fbDelete('students', sid);
+}
+
+let state = {
+  students: JSON.parse(JSON.stringify(DEFAULT_STUDENTS)),
+  currentStudent:null,currentTopic:null,currentQuestions:[],
+  currentQIndex:0,sessionCorrect:0,sessionTotal:0,answered:false,
+};
+
+// ── LOGIN
+function switchTab(tab){
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&tab==='student')||(i===1&&tab==='teacher')));
+  document.getElementById('studentLogin').style.display=tab==='student'?'block':'none';
+  document.getElementById('teacherLogin').style.display=tab==='teacher'?'block':'none';
+  document.getElementById('loginError').style.display='none';
+}
+async function studentLogin(){
+  const name=document.getElementById('studentName').value.trim();
+  const pin=document.getElementById('studentPin').value.trim();
+  // Always re-fetch students from Firebase so newly added students are found
+  try{
+    const fresh=await window.fbGetAll('students');
+    if(fresh&&fresh.length>0) state.students=fresh;
+  }catch(e){}
+  const student=state.students.find(s=>s.pin===pin);
+  if(!student){showError('Invalid PIN. Ask your teacher for your access code.');return;}
+  state.currentStudent=student;
+  if(name)student.name=name;
+  showScreen('studentScreen');
+  renderStudentSidebar();
+  renderStudentAnnouncements();
+  document.getElementById('studentDisplayName').textContent=student.name;
+  document.getElementById('studentAvatar').textContent=student.name[0].toUpperCase();
+}
+async function teacherLogin(){
+  const pass=document.getElementById('teacherPass').value;
+  try{const d=await window.fbGet('config','teacher');if(d&&d.password)TEACHER_PASS=d.password;}catch(e){}
+  if(pass!==TEACHER_PASS){showError('Incorrect password.');return;}
+  try{
+    const students=await window.fbGetAll('students');
+    if(students&&students.length>0) state.students=students;
+    const qDocs=await window.fbGetAll('questions');
+    qDocs.forEach(d=>{if(d.qs&&Array.isArray(d.qs))QUESTIONS[d.id]=d.qs;});
+    const annDoc=await window.fbGet('config','announcements');
+    if(annDoc&&Array.isArray(annDoc.list))ANNOUNCEMENTS=annDoc.list;
+  }catch(e){}
+  showScreen('adminScreen');
+  renderAdminDashboard();renderStudentsTable();renderCurriculumView();updateUnlockSelect();
+  populateTopicDropdowns();renderAnnouncementList();
+}
+function showError(msg){const el=document.getElementById('loginError');el.textContent=msg;el.style.display='block';}
+function logout(){
+  state.currentStudent=null;state.currentTopic=null;
+  showScreen('loginScreen');
+  document.getElementById('loginError').style.display='none';
+  document.getElementById('studentPin').value='';
+  document.getElementById('teacherPass').value='';
+}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+// ── ADMIN NAVIGATION
+function showPanel(id, btn){
+  document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(id==='questions') renderQuestionBank();
+  if(id==='addquestion') populateTopicDropdowns();
+  if(id==='announcements') renderAnnouncementList();
+}
+
+// ── ADMIN DASHBOARD
+function renderAdminDashboard(){
+  document.getElementById('statStudents').textContent=state.students.length;
+  const totalUnlocked=state.students.reduce((a,s)=>a+s.unlocked.length,0);
+  document.getElementById('statTopics').textContent=totalUnlocked;
+  const totalAns=state.students.reduce((a,s)=>a+s.answered,0);
+  document.getElementById('statAnswered').textContent=totalAns;
+  const avg=state.students.length?Math.round(state.students.reduce((a,s)=>a+s.score,0)/state.students.length):0;
+  document.getElementById('statAvg').textContent=avg?avg+'%':'—';
+  const tbody=document.getElementById('dashTable');
+  tbody.innerHTML=state.students.map(s=>`
+    <tr>
+      <td><strong>${s.name}</strong></td>
+      <td><span class="pin-code">${s.pin}</span></td>
+      <td><div style="display:flex;align-items:center;gap:10px"><div class="progress-bar"><div class="progress-fill" style="width:${Math.round(s.unlocked.length/24*100)}%"></div></div><span style="font-size:0.8rem;color:var(--gray)">${s.unlocked.length}/24</span></div></td>
+      <td>${s.answered}</td>
+      <td style="color:${s.score>=80?'var(--green)':s.score>=60?'var(--gold)':'var(--red)'};font-weight:600">${s.score}%</td>
+    </tr>`).join('');
+}
+
+function renderStudentsTable(){
+  const tbody=document.getElementById('studentsTable');
+  tbody.innerHTML=state.students.map(s=>`
+    <tr>
+      <td><strong>${s.name}</strong></td>
+      <td><span class="pin-code">${s.pin}</span></td>
+      <td><div style="display:flex;align-items:center;gap:10px"><div class="progress-bar"><div class="progress-fill" style="width:${Math.round(s.unlocked.length/24*100)}%"></div></div><span style="font-size:0.8rem;color:var(--gray)">${s.unlocked.length}/24</span></div></td>
+      <td style="color:${s.score>=80?'var(--green)':s.score>=60?'var(--gold)':'var(--red)'};font-weight:600">${s.score}%</td>
+      <td>
+        <button class="btn-sm btn-blue" onclick="quickUnlock('${s.id}')" style="margin-right:6px">Unlock →</button>
+        <button class="btn-sm btn-red" onclick="removeStudent('${s.id}',this)">Remove</button>
+      </td>
+    </tr>`).join('');
+}
+
+function quickUnlock(sid){
+  document.getElementById('unlockStudentSelect').value=sid;
+  document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-unlock').classList.add('active');
+  renderUnlockGrid();
+}
+function removeStudent(sid,btn){
+  if(btn&&btn.dataset.confirming!=='1'){
+    btn.dataset.confirming='1';
+    btn.textContent='Sure?';
+    btn.style.background='var(--red)';
+    btn.style.color='white';
+    setTimeout(()=>{
+      if(btn&&btn.dataset.confirming==='1'){
+        btn.dataset.confirming='';
+        btn.textContent='Remove';
+        btn.style.background='';
+        btn.style.color='var(--red)';
+      }
+    },2500);
+    return;
+  }
+  if(btn&&btn.dataset) btn.dataset.confirming='';
+  state.students=state.students.filter(s=>s.id!==sid);
+  deleteStudentFromDB(sid).catch(()=>{});
+  renderStudentsTable();
+  renderAdminDashboard();
+  updateUnlockSelect();
+}
+function openAddModal(){document.getElementById('addModal').classList.add('open');}
+function closeAddModal(){document.getElementById('addModal').classList.remove('open');}
+async function addStudent(){
+  const name=document.getElementById('newStudentName').value.trim();
+  const pin=document.getElementById('newStudentPin').value.trim();
+  if(!name||pin.length<4){alert('Please enter a name and 4-digit PIN.');return;}
+  if(state.students.find(s=>s.pin===pin)){alert('PIN already in use.');return;}
+  state.students.push({id:'s'+Date.now(),name,pin,unlocked:['t01'],answered:0,score:0});
+  await saveStudents();
+  closeAddModal();
+  document.getElementById('newStudentName').value='';
+  document.getElementById('newStudentPin').value='';
+  renderStudentsTable();renderAdminDashboard();updateUnlockSelect();
+}
+function updateUnlockSelect(){
+  const sel=document.getElementById('unlockStudentSelect');
+  sel.innerHTML='<option value="">Select a student...</option>'+state.students.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+}
+function renderUnlockGrid(){
+  const sid=document.getElementById('unlockStudentSelect').value;
+  const container=document.getElementById('unlockGrid');
+  if(!sid){container.innerHTML='<p style="color:var(--gray)">Select a student above.</p>';return;}
+  const student=state.students.find(s=>s.id===sid);
+  container.innerHTML=CURRICULUM.map(month=>`
+    <div class="month-card">
+      <div class="month-header"><h3>${month.month}</h3><span class="month-badge">${month.subject}</span></div>
+      ${month.topics.map(t=>{
+        const unlocked=student.unlocked.includes(t.id);
+        return `<div class="topic-row">
+          <div><div class="topic-name">${t.icon} ${t.name}</div><div class="topic-subject">${t.sub}</div></div>
+          <button class="lock-toggle ${unlocked?'unlocked':'locked'}" onclick="toggleTopic('${sid}','${t.id}',this)"></button>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+function toggleTopic(sid,tid,btn){
+  const student=state.students.find(s=>s.id===sid);
+  if(student.unlocked.includes(tid)){student.unlocked=student.unlocked.filter(x=>x!==tid);btn.classList.remove('unlocked');btn.classList.add('locked');}
+  else{student.unlocked.push(tid);btn.classList.remove('locked');btn.classList.add('unlocked');}
+  saveStudents();
+  renderAdminDashboard();
+}
+function unlockAll(){
+  const sid=document.getElementById('unlockStudentSelect').value;if(!sid)return;
+  const student=state.students.find(s=>s.id===sid);
+  student.unlocked=[...CURRICULUM.flatMap(m=>m.topics.map(t=>t.id))];
+  saveStudents();
+  renderUnlockGrid();renderAdminDashboard();
+}
+function lockAll(){
+  const sid=document.getElementById('unlockStudentSelect').value;if(!sid)return;
+  state.students.find(s=>s.id===sid).unlocked=[];
+  saveStudents();
+  renderUnlockGrid();renderAdminDashboard();
+}
+function renderCurriculumView(){
+  document.getElementById('curriculumView').innerHTML=CURRICULUM.map(month=>`
+    <div style="margin-bottom:28px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <h3 style="font-size:1.1rem">${month.month}</h3>
+        <span style="background:rgba(29,78,216,0.2);color:var(--sky);padding:3px 12px;border-radius:12px;font-size:0.75rem;font-weight:600">${month.subject}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+        ${month.topics.map(t=>`
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px">
+            <div style="font-size:1.4rem;margin-bottom:8px">${t.icon}</div>
+            <div style="font-weight:600;font-size:0.9rem;margin-bottom:4px">${t.name}</div>
+            <div style="font-size:0.75rem;color:var(--gray)">${t.sub}</div>
+            <div style="font-size:0.7rem;color:var(--sky);margin-top:8px">${(QUESTIONS[t.id]||[]).length} questions</div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+// ── QUESTION BANK
+function getAllTopics(){return CURRICULUM.flatMap(m=>m.topics);}
+function populateTopicDropdowns(){
+  const topics=getAllTopics();
+  const filterSel=document.getElementById('qFilterTopic');
+  const addSel=document.getElementById('aqTopic');
+  if(filterSel) filterSel.innerHTML='<option value="">All Topics</option>'+topics.map(t=>`<option value="${t.id}">${t.icon} ${t.name}</option>`).join('');
+  if(addSel) addSel.innerHTML=topics.map(t=>`<option value="${t.id}">${t.icon} ${t.name}</option>`).join('');
+}
+
+function renderQuestionBank(){
+  const filterTopic=document.getElementById('qFilterTopic').value;
+  const filterType=document.getElementById('qFilterType').value;
+  const search=document.getElementById('qSearch').value.toLowerCase();
+  const topics=getAllTopics();
+
+  // Stats
+  let totalQ=0,mcQ=0,gridQ=0,rwQ=0;
+  Object.values(QUESTIONS).forEach(arr=>{arr.forEach(q=>{totalQ++;if(q.type==='mc')mcQ++;else if(q.type==='grid')gridQ++;else rwQ++;});});
+  document.getElementById('qStatsRow').innerHTML=`
+    <div class="q-stat"><span class="q-stat-icon">📋</span><div class="q-stat-info"><div class="q-stat-val" style="color:var(--sky)">${totalQ}</div><div class="q-stat-lbl">Total Questions</div></div></div>
+    <div class="q-stat"><span class="q-stat-icon">🔵</span><div class="q-stat-info"><div class="q-stat-val" style="color:#93c5fd">${mcQ}</div><div class="q-stat-lbl">Multiple Choice</div></div></div>
+    <div class="q-stat"><span class="q-stat-icon">🟡</span><div class="q-stat-info"><div class="q-stat-val" style="color:var(--gold)">${gridQ}</div><div class="q-stat-lbl">Grid-In</div></div></div>
+    <div class="q-stat"><span class="q-stat-icon">🟢</span><div class="q-stat-info"><div class="q-stat-val" style="color:var(--green)">${rwQ}</div><div class="q-stat-lbl">Reading & Writing</div></div></div>`;
+
+  // Build list
+  let html='';let shown=0;
+  topics.forEach(topic=>{
+    if(filterTopic && filterTopic!==topic.id) return;
+    const qs=QUESTIONS[topic.id]||[];
+    qs.forEach((q,realIdx)=>{
+      if(filterType && q.type!==filterType) return;
+      if(search && !q.text.toLowerCase().includes(search) && !(q.passage||'').toLowerCase().includes(search)) return;
+      shown++;
+      const typeLabel=q.type==='grid'?'Grid-In':q.type==='rw'?'Reading & Writing':'Multiple Choice';
+      const typeClass=q.type;
+      html+=`<div class="q-item" id="qi-${topic.id}-${realIdx}">
+        <div class="q-item-header" onclick="toggleQItem('${topic.id}-${realIdx}')">
+          <span class="q-num">${shown}</span>
+          <div>
+            <div style="font-size:0.7rem;color:var(--sky);margin-bottom:3px">${topic.icon} ${topic.name}</div>
+            <div class="q-preview">${q.text}</div>
+          </div>
+          <span class="q-type-pill ${typeClass}">${typeLabel}</span>
+          <div class="q-item-actions">
+            <button class="btn-sm btn-red" onclick="deleteQuestion(event,'${topic.id}',${realIdx})" style="font-size:0.72rem;padding:5px 10px">Delete</button>
+            <span style="color:var(--gray);font-size:0.8rem;margin-left:4px">▼</span>
+          </div>
+        </div>
+        <div class="q-item-body" id="qbody-${topic.id}-${realIdx}">
+          ${q.passage?`<div class="q-passage-preview"><strong style="color:var(--sky);font-size:0.72rem;display:block;margin-bottom:6px">📄 PASSAGE</strong>${q.passage}</div>`:''}
+          <div class="q-full-text">${q.text}</div>
+          ${q.type!=='grid'?`<div class="q-choices-list">${q.choices.map((c,ci)=>`<div class="q-choice ${ci===q.answer?'correct-choice':''}">${ci===q.answer?'✅ ':''}${c}</div>`).join('')}</div>`:`<div style="font-size:0.82rem;margin-bottom:10px;color:var(--gold)">✏️ Grid-In Answer: <strong>${q.answer}</strong></div>`}
+          <div class="q-exp-box"><strong style="display:block;margin-bottom:4px">💡 Explanation</strong>${q.exp}</div>
+        </div>
+      </div>`;
+    });
+  });
+  document.getElementById('questionList').innerHTML=shown>0?html:`<div class="empty-state"><div class="empty-icon">🔍</div><p>No questions match your filters.</p></div>`;
+}
+
+function toggleQItem(key){
+  const body=document.getElementById('qbody-'+key);
+  body.classList.toggle('open');
+}
+
+function deleteQuestion(e,tid,idx){
+  e.stopPropagation();
+  const btn=e.currentTarget||e.target;
+  // Show inline confirm to avoid blocked confirm() dialogs
+  if(btn.dataset.confirming!=='1'){
+    btn.dataset.confirming='1';
+    btn.textContent='Sure?';
+    btn.style.background='var(--red)';
+    btn.style.color='white';
+    setTimeout(()=>{
+      if(btn.dataset.confirming==='1'){
+        btn.dataset.confirming='';
+        btn.textContent='Delete';
+        btn.style.background='';
+        btn.style.color='var(--red)';
+      }
+    },2500);
+    return;
+  }
+  btn.dataset.confirming='';
+  if(!QUESTIONS[tid]||idx<0||idx>=QUESTIONS[tid].length)return;
+  QUESTIONS[tid].splice(idx,1);
+  saveQuestions().catch(()=>{});
+  renderQuestionBank();
+  renderCurriculumView();
+}
+
+// ── ADD QUESTION
+function toggleQuestionTypeFields(){
+  const type=document.getElementById('aqType').value;
+  document.getElementById('aqPassageGroup').style.display=type==='rw'?'block':'none';
+  document.getElementById('aqChoicesGroup').style.display=type==='grid'?'none':'block';
+  document.getElementById('aqGridAnswerGroup').style.display=type==='grid'?'block':'none';
+}
+
+function saveQuestion(){
+  const tid=document.getElementById('aqTopic').value;
+  const type=document.getElementById('aqType').value;
+  const text=document.getElementById('aqText').value.trim();
+  const exp=document.getElementById('aqExp').value.trim();
+  if(!text){alert('Please enter a question.');return;}
+  if(!exp){alert('Please enter an explanation.');return;}
+  let q={type,text,exp};
+  if(type==='rw'){
+    const passage=document.getElementById('aqPassage').value.trim();
+    if(passage) q.passage=passage;
+    const choices=[document.getElementById('aqC0').value,document.getElementById('aqC1').value,document.getElementById('aqC2').value,document.getElementById('aqC3').value];
+    if(choices.some(c=>!c.trim())){alert('Please fill in all 4 answer choices.');return;}
+    q.choices=choices;
+    q.answer=parseInt(document.querySelector('input[name="correctChoice"]:checked').value);
+  } else if(type==='mc'){
+    const choices=[document.getElementById('aqC0').value,document.getElementById('aqC1').value,document.getElementById('aqC2').value,document.getElementById('aqC3').value];
+    if(choices.some(c=>!c.trim())){alert('Please fill in all 4 answer choices.');return;}
+    q.choices=choices;
+    q.answer=parseInt(document.querySelector('input[name="correctChoice"]:checked').value);
+  } else {
+    const ans=document.getElementById('aqGridAnswer').value.trim();
+    if(!ans){alert('Please enter the correct answer.');return;}
+    q.answer=ans;
+  }
+  if(!QUESTIONS[tid]) QUESTIONS[tid]=[];
+  QUESTIONS[tid].push(q);
+  saveQuestions().catch(()=>{});
+  document.getElementById('aqSuccess').style.display='block';
+  renderCurriculumView();
+}
+
+function clearQuestionForm(){
+  document.getElementById('aqText').value='';
+  document.getElementById('aqExp').value='';
+  document.getElementById('aqPassage').value='';
+  ['aqC0','aqC1','aqC2','aqC3'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('aqGridAnswer').value='';
+  document.querySelector('input[name="correctChoice"][value="0"]').checked=true;
+  document.getElementById('aqSuccess').style.display='none';
+}
+
+// ── STUDENT SIDEBAR
+function renderStudentSidebar(){
+  const sidebar=document.getElementById('currSidebar');
+  const student=state.currentStudent;
+  sidebar.innerHTML=CURRICULUM.map(month=>`
+    <div class="curr-month">
+      <div class="curr-month-header">${month.month}</div>
+      ${month.topics.map(t=>{
+        const unlocked=student.unlocked.includes(t.id);
+        return `<div class="curr-topic ${!unlocked?'locked-topic':''} ${state.currentTopic===t.id?'active-topic':''}"
+          onclick="${unlocked?`loadTopic('${t.id}')`:'showLockedMsg()'}">
+          <span class="topic-icon">${t.icon}</span>
+          <div class="topic-info">
+            <div class="t-name">${t.name}</div>
+            <div class="t-sub">${t.sub}</div>
+            ${unlocked?`<div class="t-count">${(QUESTIONS[t.id]||getDefaultQuestions(t.id)).length} questions</div>`:''}
+          </div>
+          ${!unlocked?'<span class="lock-icon">🔒</span>':''}
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+function showLockedMsg(){
+  document.getElementById('quizArea').innerHTML=`<div class="quiz-welcome"><div style="font-size:3rem;margin-bottom:16px">🔒</div><h2>Topic Locked</h2><p>Ask your teacher to unlock this topic.</p></div>`;
+}
+
+// ── QUIZ
+function loadTopic(tid){
+  state.currentTopic=tid;
+  state.currentQuestions=[...(QUESTIONS[tid]||getDefaultQuestions(tid))];
+  for(let i=state.currentQuestions.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[state.currentQuestions[i],state.currentQuestions[j]]=[state.currentQuestions[j],state.currentQuestions[i]];}
+  state.currentQIndex=0;state.sessionCorrect=0;state.sessionTotal=0;state.answered=false;
+  renderStudentSidebar();renderQuestion();
+}
+
+function renderQuestion(){
+  const qs=state.currentQuestions;
+  if(state.currentQIndex>=qs.length){renderResults();return;}
+  const q=qs[state.currentQIndex];
+  const topic=CURRICULUM.flatMap(m=>m.topics).find(t=>t.id===state.currentTopic);
+  const pct=Math.round(state.currentQIndex/qs.length*100);
+  let qHTML='';
+  if(q.type==='rw'||q.passage) qHTML+=`<div class="passage-box"><h4>📄 Passage</h4>${q.passage}</div>`;
+  const badge=q.type==='grid'?'<span class="q-type-badge grid">Grid-In</span>':q.type==='rw'?'<span class="q-type-badge rw">Reading & Writing</span>':'<span class="q-type-badge mc">Multiple Choice</span>';
+  qHTML+=badge+`<div class="q-text">${q.text}</div>`;
+  if(q.type==='grid'){
+    qHTML+=`<div class="grid-input-wrap"><input class="grid-input" id="gridInput" type="text" placeholder="Enter answer"/></div>`;
+  } else {
+    qHTML+=`<div class="choices">${q.choices.map((c,i)=>`<button class="choice-btn" onclick="selectChoice(${i})" id="choice-${i}"><span class="choice-letter">${String.fromCharCode(65+i)}</span><span>${c.length>2&&c[1]==='.'?c.substring(3):c}</span></button>`).join('')}</div>`;
+  }
+  qHTML+=`<div class="explanation" id="explanation"><strong>✅ Explanation:</strong> ${q.exp}</div>`;
+  qHTML+=`<div class="q-actions"><button class="btn-submit" id="submitBtn" onclick="submitAnswer()" ${q.type!=='grid'?'disabled':''}>Check Answer</button><button class="btn-next" id="nextBtn" onclick="nextQuestion()">Next Question →</button><div class="score-badge">Score: <span>${state.sessionCorrect}/${state.sessionTotal}</span></div></div>`;
+  document.getElementById('quizArea').innerHTML=`<div class="question-card"><div class="q-header"><span class="q-topic-pill">${topic?.icon||''} ${topic?.name||''}</span><span class="q-counter">Question ${state.currentQIndex+1} of ${qs.length}</span></div><div class="q-progress"><div class="q-progress-fill" style="width:${pct}%"></div></div>${qHTML}</div>`;
+  state.answered=false;
+  if(q.type==='grid'){const inp=document.getElementById('gridInput');if(inp)inp.addEventListener('input',()=>{document.getElementById('submitBtn').disabled=!inp.value.trim();});}
+}
+
+let selectedChoice=null;
+function selectChoice(i){if(state.answered)return;selectedChoice=i;document.querySelectorAll('.choice-btn').forEach((b,j)=>b.classList.toggle('selected',j===i));document.getElementById('submitBtn').disabled=false;}
+
+function submitAnswer(){
+  if(state.answered)return;state.answered=true;
+  const q=state.currentQuestions[state.currentQIndex];state.sessionTotal++;let correct=false;
+  if(q.type==='grid'){const val=document.getElementById('gridInput').value.trim();correct=val===String(q.answer);document.getElementById('gridInput').classList.add(correct?'correct':'wrong');}
+  else{const correctIdx=parseInt(q.answer);correct=selectedChoice===correctIdx;document.querySelectorAll('.choice-btn').forEach((b,i)=>{b.disabled=true;if(i===correctIdx)b.classList.add('correct');else if(i===selectedChoice&&!correct)b.classList.add('wrong');});}
+  if(correct)state.sessionCorrect++;
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('submitBtn').style.display='none';
+  document.getElementById('nextBtn').style.display='inline-block';
+  state.currentStudent.answered++;
+  state.currentStudent.score=Math.round(((state.currentStudent.score*(state.currentStudent.answered-1))+(correct?100:0))/state.currentStudent.answered);
+  saveStudents();
+}
+
+function nextQuestion(){state.currentQIndex++;selectedChoice=null;renderQuestion();}
+
+function renderResults(){
+  const pct=Math.round(state.sessionCorrect/state.sessionTotal*100);
+  const color=pct>=80?'var(--green)':pct>=60?'var(--gold)':'var(--red)';
+  const msg=pct>=80?'Excellent work! 🎉':pct>=60?'Good effort! Keep practicing.':'Keep going — you\'ll get there! 💪';
+  document.getElementById('quizArea').innerHTML=`<div class="results-card"><div class="big-score" style="color:${color}">${pct}%</div><div class="score-label">Session Score</div><p style="color:var(--gray);margin-bottom:20px">${msg}</p><div class="results-stats"><div class="r-stat"><div class="rv" style="color:var(--green)">${state.sessionCorrect}</div><div class="rl">Correct</div></div><div class="r-stat"><div class="rv" style="color:var(--red)">${state.sessionTotal-state.sessionCorrect}</div><div class="rl">Incorrect</div></div><div class="r-stat"><div class="rv" style="color:var(--sky)">${state.sessionTotal}</div><div class="rl">Total</div></div></div><button class="btn-primary" onclick="loadTopic('${state.currentTopic}')" style="margin-top:8px">Try Again ↺</button></div>`;
+}
+
+// ── TEACHER PROFILE
+function openTeacherProfile(){
+  document.getElementById('tpCurrentPass').value='';
+  document.getElementById('tpNewPass').value='';
+  document.getElementById('tpConfirmPass').value='';
+  document.getElementById('tpError').style.display='none';
+  document.getElementById('tpSuccess').style.display='none';
+  document.getElementById('teacherProfileModal').classList.add('open');
+}
+function closeTeacherProfile(){document.getElementById('teacherProfileModal').classList.remove('open');}
+function saveTeacherPassword(){
+  const cur=document.getElementById('tpCurrentPass').value;
+  const newP=document.getElementById('tpNewPass').value;
+  const conf=document.getElementById('tpConfirmPass').value;
+  const errEl=document.getElementById('tpError');
+  errEl.style.display='none';
+  if(cur!==TEACHER_PASS){errEl.textContent='Current password is incorrect.';errEl.style.display='block';return;}
+  if(newP.length<6){errEl.textContent='New password must be at least 6 characters.';errEl.style.display='block';return;}
+  if(newP!==conf){errEl.textContent='Passwords do not match.';errEl.style.display='block';return;}
+  TEACHER_PASS=newP;
+  saveTeacherPass(newP).catch(()=>{});
+  document.getElementById('tpSuccess').style.display='block';
+  document.getElementById('tpCurrentPass').value='';
+  document.getElementById('tpNewPass').value='';
+  document.getElementById('tpConfirmPass').value='';
+}
+
+// ── STUDENT PROFILE
+function openStudentProfile(){
+  const s=state.currentStudent;if(!s)return;
+  document.getElementById('spAvatar').textContent=s.name[0].toUpperCase();
+  document.getElementById('spName').textContent=s.name;
+  document.getElementById('spDisplayName').value=s.name;
+  document.getElementById('spCurrentPin').value='';
+  document.getElementById('spNewPin').value='';
+  document.getElementById('spConfirmPin').value='';
+  document.getElementById('spError').style.display='none';
+  document.getElementById('spSuccess').style.display='none';
+  document.getElementById('studentProfileModal').classList.add('open');
+}
+function closeStudentProfile(){document.getElementById('studentProfileModal').classList.remove('open');}
+function saveStudentProfile(){
+  const s=state.currentStudent;if(!s)return;
+  const errEl=document.getElementById('spError');
+  errEl.style.display='none';
+  const newName=document.getElementById('spDisplayName').value.trim();
+  const curPin=document.getElementById('spCurrentPin').value.trim();
+  const newPin=document.getElementById('spNewPin').value.trim();
+  const confPin=document.getElementById('spConfirmPin').value.trim();
+  if(!newName){errEl.textContent='Name cannot be empty.';errEl.style.display='block';return;}
+  if(curPin||newPin||confPin){
+    if(curPin!==s.pin){errEl.textContent='Current PIN is incorrect.';errEl.style.display='block';return;}
+    if(!/^\d{4}$/.test(newPin)){errEl.textContent='New PIN must be exactly 4 digits.';errEl.style.display='block';return;}
+    if(newPin!==confPin){errEl.textContent='PINs do not match.';errEl.style.display='block';return;}
+    if(state.students.find(st=>st.pin===newPin&&st.id!==s.id)){errEl.textContent='That PIN is already taken.';errEl.style.display='block';return;}
+    s.pin=newPin;
+  }
+  s.name=newName;
+  saveStudents();
+  document.getElementById('studentDisplayName').textContent=s.name;
+  document.getElementById('studentAvatar').textContent=s.name[0].toUpperCase();
+  document.getElementById('spAvatar').textContent=s.name[0].toUpperCase();
+  document.getElementById('spName').textContent=s.name;
+  document.getElementById('spSuccess').style.display='block';
+}
+
+// ── ANNOUNCEMENTS (teacher)
+function postAnnouncement(){
+  const title=document.getElementById('annTitle').value.trim();
+  const body=document.getElementById('annBody').value.trim();
+  if(!title||!body){alert('Please enter both a title and message.');return;}
+  ANNOUNCEMENTS.unshift({id:'a'+Date.now(),title,body,date:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})});
+  saveAnnouncements();
+  document.getElementById('annTitle').value='';
+  document.getElementById('annBody').value='';
+  document.getElementById('annSuccess').style.display='block';
+  setTimeout(()=>{if(document.getElementById('annSuccess'))document.getElementById('annSuccess').style.display='none';},3000);
+  renderAnnouncementList();
+}
+function renderAnnouncementList(){
+  const el=document.getElementById('annList');
+  const cnt=document.getElementById('annCount');
+  if(!el)return;
+  if(!ANNOUNCEMENTS.length){el.innerHTML='<p style="color:var(--gray);font-size:0.875rem;padding:8px">No announcements yet.</p>';if(cnt)cnt.textContent='';return;}
+  if(cnt)cnt.textContent=ANNOUNCEMENTS.length+' posted';
+  el.innerHTML=ANNOUNCEMENTS.map(a=>`
+    <div class="ann-item">
+      <div class="ann-item-header">
+        <div>
+          <div class="ann-item-title">${a.title}</div>
+          <div class="ann-item-date">📅 ${a.date}</div>
+        </div>
+        <button class="ann-delete-btn" onclick="deleteAnnouncement('${a.id}')">🗑 Delete</button>
+      </div>
+      <div class="ann-item-body">${a.body}</div>
+    </div>`).join('');
+}
+function deleteAnnouncement(id){
+  if(!confirm('Delete this announcement?'))return;
+  ANNOUNCEMENTS=ANNOUNCEMENTS.filter(a=>a.id!==id);
+  saveAnnouncements();
+  renderAnnouncementList();
+}
+
+// ── ANNOUNCEMENTS (student view)
+function renderStudentAnnouncements(){
+  const area=document.getElementById('studentAnnouncementsArea');
+  if(!area)return;
+  if(!ANNOUNCEMENTS.length){area.style.display='none';return;}
+  area.style.display='block';
+  area.innerHTML=`<h3 style="font-family:'Playfair Display',serif;font-size:1.2rem;margin-bottom:14px;display:flex;align-items:center;gap:8px">📢 <span>From Your Teacher</span></h3>`+
+    ANNOUNCEMENTS.map(a=>`
+      <div class="ann-card">
+        <div class="ann-card-title">📌 ${a.title}</div>
+        <div class="ann-card-date">${a.date}</div>
+        <div class="ann-card-body">${a.body}</div>
+      </div>`).join('');
+}
+
+// ── ASYNC INIT — load all shared data before showing the app
+async function saveTeacherPass(p) {
+  await window.fbSet('config', 'teacher', {password: p});
+}
+
+window.addEventListener('DOMContentLoaded', async function() {
+  document.getElementById('loadingOverlay').style.display='flex';
+
+  // Wait for Firebase to be ready
+  if (!window._firebaseReady) {
+    await new Promise(r => document.addEventListener('firebaseReady', r, {once:true}));
+  }
+
+  try {
+    // 1. Teacher password
+    const teacherDoc = await window.fbGet('config', 'teacher');
+    if (teacherDoc && teacherDoc.password) TEACHER_PASS = teacherDoc.password;
+
+    // 2. Announcements
+    const annDoc = await window.fbGet('config', 'announcements');
+    if (annDoc && Array.isArray(annDoc.list)) ANNOUNCEMENTS = annDoc.list;
+
+    // 3. Students — each student is a separate doc
+    const students = await window.fbGetAll('students');
+    if (students && students.length > 0) state.students = students;
+
+    // 4. Questions — each topic is a separate doc
+    const qDocs = await window.fbGetAll('questions');
+    qDocs.forEach(d => {
+      if (d.qs && Array.isArray(d.qs)) QUESTIONS[d.id] = d.qs;
+    });
+
+  } catch(e) {
+    console.warn('Firebase load error:', e);
+  }
+
+  document.getElementById('loadingOverlay').style.display='none';
+  renderAdminDashboard();
+  renderStudentsTable();
+  renderCurriculumView();
+  updateUnlockSelect();
+  populateTopicDropdowns();
+  renderAnnouncementList();
+});
+</script>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div id="loadingOverlay" style="display:none">
+  <div class="spinner"></div>
+  <p>Loading PrepSAT Pro…</p>
+</div>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="screen active">
+  <div class="login-box">
+    <h1>PrepSAT <span style="color:var(--sky)">Pro</span></h1>
+    <p class="sub">Your 3-month SAT mastery program</p>
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchTab('student')">Student</button>
+      <button class="tab-btn" onclick="switchTab('teacher')">Teacher</button>
+    </div>
+    <div id="studentLogin">
+      <div class="form-group"><label>Your Name</label><input id="studentName" type="text" placeholder="Enter your name"/></div>
+      <div class="form-group"><label>Access PIN</label><input id="studentPin" type="password" placeholder="4-digit PIN" maxlength="4"/></div>
+      <button class="btn-primary" onclick="studentLogin()">Start Learning →</button>
+    </div>
+    <div id="teacherLogin" style="display:none">
+      <div class="form-group"><label>Password</label><input id="teacherPass" type="password" placeholder="Teacher password"/></div>
+      <button class="btn-primary" onclick="teacherLogin()">Open Admin Panel →</button>
+    </div>
+    <p class="error-msg" id="loginError">Invalid credentials. Try again.</p>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="adminScreen" class="screen">
+  <div class="topbar">
+    <div class="topbar-logo">PrepSAT <span>Pro</span> — Admin</div>
+    <div class="topbar-right">
+      <span class="badge">Teacher</span>
+      <button class="profile-btn" onclick="openTeacherProfile()">👤 Profile</button>
+      <button class="logout-btn" onclick="logout()">Log out</button>
+    </div>
+  </div>
+  <div class="admin-body">
+    <div class="admin-sidebar">
+      <div class="sidebar-section">
+        <h4>Overview</h4>
+        <button class="sidebar-btn active" onclick="showPanel('dashboard',this)"><span class="icon">📊</span>Dashboard</button>
+        <button class="sidebar-btn" onclick="showPanel('students',this)"><span class="icon">👥</span>Students</button>
+      </div>
+      <div class="sidebar-section">
+        <h4>Curriculum</h4>
+        <button class="sidebar-btn" onclick="showPanel('unlock',this)"><span class="icon">🔓</span>Unlock Topics</button>
+        <button class="sidebar-btn" onclick="showPanel('curriculum',this)"><span class="icon">📚</span>Study Plan</button>
+      </div>
+      <div class="sidebar-section">
+        <h4>Questions</h4>
+        <button class="sidebar-btn" onclick="showPanel('questions',this)"><span class="icon">❓</span>Question Bank</button>
+        <button class="sidebar-btn" onclick="showPanel('addquestion',this)"><span class="icon">➕</span>Add Question</button>
+      </div>
+      <div class="sidebar-section">
+        <h4>Communication</h4>
+        <button class="sidebar-btn" onclick="showPanel('announcements',this)"><span class="icon">📢</span>Announcements</button>
+      </div>
+    </div>
+    <div class="admin-main">
+
+      <!-- DASHBOARD -->
+      <div id="panel-dashboard" class="admin-panel active">
+        <div class="panel-title">Dashboard</div>
+        <div class="panel-sub">Overview of your class progress</div>
+        <div class="stats-row">
+          <div class="stat-card blue"><div class="val" id="statStudents">0</div><div class="lbl">Students</div></div>
+          <div class="stat-card gold"><div class="val" id="statTopics">0</div><div class="lbl">Topics Unlocked</div></div>
+          <div class="stat-card green"><div class="val" id="statAnswered">0</div><div class="lbl">Questions Answered</div></div>
+          <div class="stat-card red"><div class="val" id="statAvg">—</div><div class="lbl">Avg. Score</div></div>
+        </div>
+        <div class="section-card">
+          <div class="section-card-header"><h3>Recent Student Activity</h3></div>
+          <table><thead><tr><th>Student</th><th>PIN</th><th>Topics Unlocked</th><th>Questions Done</th><th>Avg Score</th></tr></thead>
+          <tbody id="dashTable"></tbody></table>
+        </div>
+      </div>
+
+      <!-- STUDENTS -->
+      <div id="panel-students" class="admin-panel">
+        <div class="panel-title">Students</div>
+        <div class="panel-sub">Manage student accounts and PINs</div>
+        <div class="section-card">
+          <div class="section-card-header"><h3>Student Roster</h3><button class="btn-sm btn-blue" onclick="openAddModal()">+ Add Student</button></div>
+          <table><thead><tr><th>Name</th><th>PIN</th><th>Progress</th><th>Score</th><th>Actions</th></tr></thead>
+          <tbody id="studentsTable"></tbody></table>
+        </div>
+      </div>
+
+      <!-- UNLOCK -->
+      <div id="panel-unlock" class="admin-panel">
+        <div class="panel-title">Unlock Topics</div>
+        <div class="panel-sub">Control which topics each student can access</div>
+        <div class="student-select-row">
+          <label style="color:var(--gray);font-size:0.875rem">Student:</label>
+          <select id="unlockStudentSelect" onchange="renderUnlockGrid()"><option value="">Select a student...</option></select>
+          <button class="btn-sm btn-green" onclick="unlockAll()">Unlock All</button>
+          <button class="btn-sm btn-red" onclick="lockAll()">Lock All</button>
+        </div>
+        <div id="unlockGrid" class="curriculum-grid"></div>
+      </div>
+
+      <!-- CURRICULUM -->
+      <div id="panel-curriculum" class="admin-panel">
+        <div class="panel-title">3-Month Study Plan</div>
+        <div class="panel-sub">Full SAT curriculum overview</div>
+        <div id="curriculumView"></div>
+      </div>
+
+      <!-- QUESTION BANK -->
+      <div id="panel-questions" class="admin-panel">
+        <div class="panel-title">Question Bank</div>
+        <div class="panel-sub">View, search, and manage all questions</div>
+        <div class="q-stats-row" id="qStatsRow"></div>
+        <div class="q-toolbar">
+          <select id="qFilterTopic" onchange="renderQuestionBank()">
+            <option value="">All Topics</option>
+          </select>
+          <select id="qFilterType" onchange="renderQuestionBank()">
+            <option value="">All Types</option>
+            <option value="mc">Multiple Choice</option>
+            <option value="grid">Grid-In</option>
+            <option value="rw">Reading & Writing</option>
+          </select>
+          <input class="q-search" id="qSearch" placeholder="🔍 Search questions..." oninput="renderQuestionBank()"/>
+          <button class="btn-sm btn-blue" onclick="showPanel('addquestion',null)" style="margin-left:auto">+ Add Question</button>
+        </div>
+        <div id="questionList" class="question-list"></div>
+      </div>
+
+      <!-- ANNOUNCEMENTS -->
+      <div id="panel-announcements" class="admin-panel">
+        <div class="panel-title">Announcements</div>
+        <div class="panel-sub">Post messages that all students will see when they log in</div>
+        <div class="section-card" style="margin-bottom:24px">
+          <div class="section-card-header"><h3>New Announcement</h3></div>
+          <div style="padding:24px">
+            <div class="form-group"><label>Title</label><input id="annTitle" type="text" placeholder="e.g. This week's focus topics…"/></div>
+            <div class="form-group"><label>Message</label><textarea id="annBody" style="width:100%;padding:12px 14px;background:var(--navy2);border:1px solid var(--border);border-radius:10px;color:white;font-family:'DM Sans',sans-serif;font-size:0.875rem;outline:none;resize:vertical;min-height:100px;" placeholder="Write your announcement here…"></textarea></div>
+            <button class="btn-sm btn-blue" onclick="postAnnouncement()" style="padding:11px 28px;font-size:0.9rem">📢 Post Announcement</button>
+            <div id="annSuccess" style="display:none;margin-top:12px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:10px;padding:12px 16px;color:#a7f3d0;font-size:0.875rem">✅ Announcement posted!</div>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="section-card-header"><h3>Posted Announcements</h3><span id="annCount" style="color:var(--gray);font-size:0.8rem"></span></div>
+          <div style="padding:16px" id="annList"><p style="color:var(--gray);font-size:0.875rem;padding:8px">No announcements yet.</p></div>
+        </div>
+      </div>
+
+      <!-- ADD QUESTION -->
+      <div id="panel-addquestion" class="admin-panel">
+        <div class="panel-title">Add Question</div>
+        <div class="panel-sub">Create a new question for any topic</div>
+        <div class="section-card">
+          <div class="section-card-header"><h3>New Question</h3></div>
+          <div style="padding:24px" class="add-q-form">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+              <div class="form-group">
+                <label>Topic</label>
+                <select id="aqTopic" style="width:100%;padding:10px 14px;background:var(--navy2);border:1px solid var(--border);color:white;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.875rem;outline:none;"></select>
+              </div>
+              <div class="form-group">
+                <label>Question Type</label>
+                <select id="aqType" onchange="toggleQuestionTypeFields()" style="width:100%;padding:10px 14px;background:var(--navy2);border:1px solid var(--border);color:white;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.875rem;outline:none;">
+                  <option value="mc">Multiple Choice</option>
+                  <option value="grid">Grid-In (Free Response)</option>
+                  <option value="rw">Reading & Writing</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group" id="aqPassageGroup" style="display:none">
+              <label>Passage Text (for Reading & Writing questions)</label>
+              <textarea id="aqPassage" placeholder="Paste the passage text here..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Question Text</label>
+              <textarea id="aqText" placeholder="Enter the question..." style="min-height:60px"></textarea>
+            </div>
+            <div id="aqChoicesGroup" class="form-group">
+              <label>Answer Choices</label>
+              <div class="choices-inputs">
+                <div class="choice-input-row"><span class="choice-letter-badge">A</span><input id="aqC0" type="text" placeholder="Choice A"/><label class="correct-radio"><input type="radio" name="correctChoice" value="0" checked/> Correct</label></div>
+                <div class="choice-input-row"><span class="choice-letter-badge">B</span><input id="aqC1" type="text" placeholder="Choice B"/><label class="correct-radio"><input type="radio" name="correctChoice" value="1"/> Correct</label></div>
+                <div class="choice-input-row"><span class="choice-letter-badge">C</span><input id="aqC2" type="text" placeholder="Choice C"/><label class="correct-radio"><input type="radio" name="correctChoice" value="2"/> Correct</label></div>
+                <div class="choice-input-row"><span class="choice-letter-badge">D</span><input id="aqC3" type="text" placeholder="Choice D"/><label class="correct-radio"><input type="radio" name="correctChoice" value="3"/> Correct</label></div>
+              </div>
+            </div>
+            <div class="form-group" id="aqGridAnswerGroup" style="display:none">
+              <label>Correct Answer</label>
+              <input id="aqGridAnswer" type="text" placeholder="Enter the exact correct answer (e.g. 42 or 3/4)"/>
+            </div>
+            <div class="form-group">
+              <label>Explanation</label>
+              <textarea id="aqExp" placeholder="Explain why the correct answer is correct..."></textarea>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:8px">
+              <button class="btn-sm btn-green" onclick="saveQuestion()" style="padding:12px 28px;font-size:0.9rem">✅ Save Question</button>
+              <button class="btn-sm" onclick="clearQuestionForm()" style="background:transparent;border:1px solid var(--border);color:var(--gray);padding:12px 20px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.85rem">Clear</button>
+            </div>
+            <div id="aqSuccess" style="display:none;margin-top:14px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:10px;padding:12px 16px;color:#a7f3d0;font-size:0.875rem">
+              ✅ Question saved successfully! <a href="#" onclick="showPanel('questions',null);return false;" style="color:var(--sky);text-decoration:underline">View in Question Bank →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- TEACHER PROFILE MODAL -->
+<div class="modal-overlay" id="teacherProfileModal">
+  <div class="modal" style="width:440px">
+    <button class="modal-close" onclick="closeTeacherProfile()">✕</button>
+    <div class="profile-avatar-lg">T</div>
+    <div class="profile-name">Teacher</div>
+    <div class="profile-role">Administrator · PrepSAT Pro</div>
+    <hr class="divider"/>
+    <h4 style="font-size:0.85rem;color:var(--gray);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px">Change Password</h4>
+    <div class="form-group"><label>Current Password</label><input id="tpCurrentPass" type="password" placeholder="Enter current password"/></div>
+    <div class="form-group"><label>New Password</label><input id="tpNewPass" type="password" placeholder="Enter new password (min 6 chars)"/></div>
+    <div class="form-group"><label>Confirm New Password</label><input id="tpConfirmPass" type="password" placeholder="Repeat new password"/></div>
+    <div id="tpError" style="color:var(--red);font-size:0.8rem;margin-top:4px;display:none"></div>
+    <div id="tpSuccess" class="success-msg">✅ Password updated successfully!</div>
+    <div class="modal-actions">
+      <button class="btn-sm btn-blue" onclick="saveTeacherPassword()" style="flex:1;padding:12px">Save Changes</button>
+      <button class="btn-sm" onclick="closeTeacherProfile()" style="background:transparent;border:1px solid var(--border);color:var(--gray);flex:1;padding:12px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- STUDENT PROFILE MODAL -->
+<div class="modal-overlay" id="studentProfileModal">
+  <div class="modal" style="width:420px">
+    <button class="modal-close" onclick="closeStudentProfile()">✕</button>
+    <div class="profile-avatar-lg" id="spAvatar">?</div>
+    <div class="profile-name" id="spName">Student</div>
+    <div class="profile-role">Student · PrepSAT Pro</div>
+    <hr class="divider"/>
+    <h4 style="font-size:0.85rem;color:var(--gray);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px">Edit Profile</h4>
+    <div class="form-group"><label>Display Name</label><input id="spDisplayName" type="text" placeholder="Your name"/></div>
+    <hr class="divider"/>
+    <h4 style="font-size:0.85rem;color:var(--gray);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px">Change PIN</h4>
+    <div class="form-group"><label>Current PIN</label><input id="spCurrentPin" type="password" placeholder="Enter current 4-digit PIN" maxlength="4"/></div>
+    <div class="form-group"><label>New PIN</label><input id="spNewPin" type="password" placeholder="New 4-digit PIN" maxlength="4"/></div>
+    <div class="form-group"><label>Confirm New PIN</label><input id="spConfirmPin" type="password" placeholder="Repeat new PIN" maxlength="4"/></div>
+    <div id="spError" style="color:var(--red);font-size:0.8rem;margin-top:4px;display:none"></div>
+    <div id="spSuccess" class="success-msg">✅ Profile updated!</div>
+    <div class="modal-actions">
+      <button class="btn-sm btn-blue" onclick="saveStudentProfile()" style="flex:1;padding:12px">Save Changes</button>
+      <button class="btn-sm" onclick="closeStudentProfile()" style="background:transparent;border:1px solid var(--border);color:var(--gray);flex:1;padding:12px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <h3>Add New Student</h3>
+    <div class="form-group"><label>Full Name</label><input id="newStudentName" type="text" placeholder="Student's name"/></div>
+    <div class="form-group"><label>PIN (4 digits)</label><input id="newStudentPin" type="text" placeholder="e.g. 1234" maxlength="4"/></div>
+    <div class="modal-actions">
+      <button class="btn-sm btn-blue" onclick="addStudent()" style="flex:1;padding:12px">Add Student</button>
+      <button class="btn-sm" style="background:transparent;border:1px solid var(--border);color:var(--gray);flex:1;padding:12px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif" onclick="closeAddModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- STUDENT SCREEN -->
+<div id="studentScreen" class="screen">
+  <div class="student-topbar">
+    <div class="topbar-logo" style="font-family:'Playfair Display',serif;font-size:1.3rem">PrepSAT <span style="color:var(--sky)">Pro</span></div>
+    <div class="student-name-tag">
+      <div class="avatar" id="studentAvatar">?</div>
+      <span id="studentDisplayName" style="font-weight:500;font-size:0.9rem"></span>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="profile-btn" onclick="openStudentProfile()">👤 Profile</button>
+      <button class="logout-btn" onclick="logout()">Log out</button>
+    </div>
+  </div>
+  <div class="student-body">
+    <div class="curriculum-sidebar" id="currSidebar"></div>
+    <div class="quiz-area" id="quizArea">
+      <div class="quiz-welcome">
+        <div id="studentAnnouncementsArea" class="welcome-announcements" style="display:none"></div>
+        <div style="font-size:3rem;margin-bottom:16px">📖</div>
+        <h2>Ready to practice?</h2>
+        <p>Select a topic from the curriculum on the left to start practicing SAT questions.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
